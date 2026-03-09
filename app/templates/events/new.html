@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Event{% endblock %}
+
+{% block content %}
+  <h2>Create Event</h2>
+
+  <form method="post">
+    <div class="field">
+      <label for="title">Title</label>
+      <input id="title" name="title" required />
+    </div>
+
+    <div class="field">
+      <label for="date">Event Date</label>
+      <input id="date" name="date" type="date" required />
+    </div>
+
+    <div class="field">
+      <label for="time">Event Time (optional)</label>
+      <input id="time" name="time" type="time" />
+    </div>
+
+    <div class="field">
+      <label for="game_id">Game</label>
+      <select id="game_id" name="game_id" required>
+        <option value="">— Select —</option>
+        {% for g in games %}
+          <option value="{{ g.id }}">{{ g.name }}</option>
+        {% endfor %}
+      </select>
+      <small><a href="{{ url_for('games.add_game', next=url_for('events.create_event')) }}">Add game</a></small>
+    </div>
+
+    <div class="field">
+      <label for="event_type">Event Type (optional)</label>
+      <select id="event_type" name="event_type">
+        <option value="">— Select —</option>
+        {% for opt in event_type_options %}
+          <option value="{{ opt.name }}">{{ opt.name }}</option>
+        {% endfor %}
+      </select>
+      <small><a href="{{ url_for('event_types.add_event_type', next=url_for('events.create_event')) }}">Add event type</a></small>
+    </div>
+
+    <div class="field">
+      <label for="owner_id">Primary Owner</label>
+      <select id="owner_id" name="owner_id" required>
+        <option value="">— Select —</option>
+        {% for u in users %}
+          <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+        {% endfor %}
+      </select>
+      <small><a href="{{ url_for('users.add_user') }}">Add team member</a></small>
+    </div>
+
+    <div class="field">
+      <label for="allowed_date_range">Allowed Date Range (optional)</label>
+      <input
+        id="allowed_date_range"
+        name="allowed_date_range"
+        placeholder="e.g. 03/28–03/29 or April 4–5"
+      />
+    </div>
+
+    <div class="field">
+      <label for="scheduling_notes">Scheduling Notes (optional)</label>
+      <textarea id="scheduling_notes" name="scheduling_notes" rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Event</button>
+  </form>
+{% endblock %}
+

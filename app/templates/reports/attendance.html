@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}Attendance vs preparation{% endblock %}
+
+{% block content %}
+  <h2>Attendance vs preparation</h2>
+  <p><a href="{{ url_for('reports.index') }}">← Reports</a></p>
+  <p>Events with attendees recorded. Compare average attendance when all pre-event tasks were done on time vs when they weren’t.</p>
+
+  <table class="report-summary" style="margin-bottom: 1.5rem;">
+    <tr>
+      <th>Fully prepared events</th>
+      <td>{{ count_prepared }} events</td>
+      <td>Avg attendees: {{ avg_prepared if avg_prepared is not none else '—' }}</td>
+    </tr>
+    <tr>
+      <th>Not fully prepared</th>
+      <td>{{ count_not_prepared }} events</td>
+      <td>Avg attendees: {{ avg_not_prepared if avg_not_prepared is not none else '—' }}</td>
+    </tr>
+  </table>
+
+  <p><strong>Events with attendees (used in this report):</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Event</th>
+        <th>Date</th>
+        <th>Attendees</th>
+        <th>Fully prepared</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in events %}
+        <tr>
+          <td><a href="{{ url_for('events.event_detail', event_id=row.event.id) }}">{{ row.event.title }}</a></td>
+          <td>{{ row.event.event_datetime.strftime("%Y-%m-%d") }}</td>
+          <td>{{ row.attendees }}</td>
+          <td>{{ 'Yes' if row.fully_prepared else 'No' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if not events %}
+    <p>No events have attendees set. Set attendees on each event’s detail page to see this report.</p>
+  {% endif %}
+{% endblock %}

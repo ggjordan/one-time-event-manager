@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+  <h1>Event Planning App</h1>
+  <p>This is the starting point for your event planning and coordination tool.</p>
+
+  <p>
+    Start by creating an event on the
+    <a href="{{ url_for('events.list_events') }}">Events</a> page.
+  </p>
+{% endblock %}
+
+

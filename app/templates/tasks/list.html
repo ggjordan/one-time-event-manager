@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block title %}Tasks{% if assignee_name %} — {{ assignee_name }}{% endif %}{% endblock %}
+
+{% block content %}
+  <h2>{% if assignee_name %}{{ assignee_name }}'s tasks{% else %}Tasks{% endif %}</h2>
+
+  {% if assignee_id %}
+    <p><a href="{{ url_for('tasks.list_tasks') }}">← Back to all tasks</a></p>
+  {% endif %}
+
+  <div class="tasks-controls">
+    {% if assignee_links %}
+      <p><strong>Jump to:</strong>
+        {% for uid, uname in assignee_links %}
+          <a href="{{ url_for('tasks.tasks_by_assignee', user_id=uid, status=status_filter, group_by=group_by, sort_by=sort_by, sort_dir=sort_dir) }}">{{ uname }}</a>
+          {% if not loop.last %} · {% endif %}
+        {% endfor %}
+      </p>
+    {% endif %}
+
+    <p>
+      <strong>Status:</strong>
+      {% for value, label in status_filter_options %}
+        {% if assignee_id %}
+          <a href="{{ url_for('tasks.tasks_by_assignee', user_id=assignee_id, status=value, group_by=group_by, sort_by=sort_by, sort_dir=sort_dir) }}" class="{{ 'active' if status_filter == value else '' }}">{{ label }}</a>
+        {% else %}
+          <a href="{{ url_for('tasks.list_tasks', status=value, group_by=group_by, sort_by=sort_by, sort_dir=sort_dir) }}" class="{{ 'active' if status_filter == value else '' }}">{{ label }}</a>
+        {% endif %}
+        {% if not loop.last %} · {% endif %}
+      {% endfor %}
+      &nbsp;|&nbsp;
+      <strong>Group by:</strong>
+      {% for value, label in group_by_options %}
+        {% if assignee_id %}
+          <a href="{{ url_for('tasks.tasks_by_assignee', user_id=assignee_id, status=status_filter, group_by=value, sort_by=sort_by, sort_dir=sort_dir) }}" class="{{ 'active' if group_by == value else '' }}">{{ label }}</a>
+        {% else %}
+          <a href="{{ url_for('tasks.list_tasks', status=status_filter, group_by=value, sort_by=sort_by, sort_dir=sort_dir) }}" class="{{ 'active' if group_by == value else '' }}">{{ label }}</a>
+        {% endif %}
+        {% if not loop.last %} · {% endif %}
+      {% endfor %}
+    </p>
+  </div>
+
+  {% for key, data in group_list %}
+    <section class="task-group">
+      <h3>{{ data.label }}</h3>
+      {% if data.tasks %}
+        <table class="sortable-tasks">
+          <thead>
+            <tr>
+              {% for col_value, col_label in sort_columns %}
+                <th>
+                  {% set next_dir = 'desc' if sort_by == col_value and sort_dir == 'asc' else 'asc' %}
+                  {% if assignee_id %}
+                    <a href="{{ url_for('tasks.tasks_by_assignee', user_id=assignee_id, status=status_filter, group_by=group_by, sort_by=col_value, sort_dir=next_dir) }}" class="sort-link {{ 'active' if sort_by == col_value else '' }}">
+                  {% else %}
+                    <a href="{{ url_for('tasks.list_tasks', status=status_filter, group_by=group_by, sort_by=col_value, sort_dir=next_dir) }}" class="sort-link {{ 'active' if sort_by == col_value else '' }}">
+                  {% endif %}
+                    {{ col_label }}{% if sort_by == col_value %} {{ '↑' if sort_dir == 'asc' else '↓' }}{% endif %}
+                  </a>
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in data.tasks %}
+              <tr>
+                <td>{{ task.name }}</td>
+                <td>
+                  <a href="{{ url_for('events.event_detail', event_id=task.event_id) }}">{{ task.event.title if task.event else '-' }}</a>
+                </td>
+                <td>{{ task.event.game.name if task.event and task.event.game else '-' }}</td>
+                <td>
+                  {% if task.actual_due_at %}
+                    {{ task.actual_due_at.strftime("%A, %B %-d") }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% if task.status == "complete" %}
+                    Done {{ task.completed_at.strftime("%A, %B %-d") }}
+                  {% else %}
+                    {{ task.status }}
+                  {% endif %}
+                </td>
+                <td>{{ task.assignee.name if task.assignee else '-' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No tasks in this group.</p>
+      {% endif %}
+    </section>
+  {% endfor %}
+{% endblock %}

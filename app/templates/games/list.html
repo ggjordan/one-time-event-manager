@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block title %}Games{% endblock %}
+
+{% block content %}
+  <h2>Games</h2>
+
+  <p>
+    <a href="{{ url_for('games.add_game') }}" class="btn btn-primary">Add game</a>
+    <a href="{{ url_for('games.merge_games') }}" class="btn">Merge duplicates</a>
+  </p>
+  {% if games %}
+    <table>
+      <thead>
+        <tr><th>Name</th></tr>
+      </thead>
+      <tbody>
+        {% for g in games %}
+          <tr><td>{{ g.name }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No games yet. <a href="{{ url_for('games.add_game') }}">Add the first one</a>.</p>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}Team members{% endblock %}
+
+{% block content %}
+  <h2>Team members</h2>
+
+  <p>
+    <a href="{{ url_for('users.add_user') }}" class="btn btn-primary">Add member</a>
+    <a href="{{ url_for('users.merge_users') }}" class="btn">Merge duplicates</a>
+  </p>
+
+  {% if users %}
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>{{ u.name }}</td>
+            <td>{{ u.email }}</td>
+            <td><a href="{{ url_for('users.edit_user', user_id=u.id) }}">Edit</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No team members yet. <a href="{{ url_for('users.add_user') }}">Add the first one</a>.</p>
+  {% endif %}
+{% endblock %}

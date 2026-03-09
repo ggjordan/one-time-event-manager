@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+  <h2>Reports</h2>
+
+  <ul>
+    <li><a href="{{ url_for('reports.by_user') }}">Tasks by user</a> – completed count and on-time % per team member</li>
+    <li><a href="{{ url_for('reports.events_prepared') }}">Events fully prepared</a> – which events had all pre-event tasks done on time</li>
+    <li><a href="{{ url_for('reports.attendance') }}">Attendance vs preparation</a> – compare average attendees when tasks were fully prepared vs not</li>
+  </ul>
+{% endblock %}

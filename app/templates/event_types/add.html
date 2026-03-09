@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}Add event type{% endblock %}
+
+{% block content %}
+  <h2>Add event type</h2>
+  <form method="post">
+    <div class="field">
+      <label for="name">Event type name</label>
+      <input id="name" name="name" required placeholder="e.g. Draft Night" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add</button>
+    <a href="{{ next_url }}" class="btn">Cancel</a>
+  </form>
+{% endblock %}

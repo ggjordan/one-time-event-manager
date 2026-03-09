@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}Events{% endblock %}
+
+{% block content %}
+  <h2>Events</h2>
+
+  <p>
+    <a href="{{ url_for('events.create_event') }}" class="btn btn-primary">Create Event</a>
+  </p>
+
+  {% if events %}
+    <table>
+      <thead>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>Title</th>
+          <th>Game</th>
+          <th>Owner</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+          <tr>
+            <td>{{ event.event_datetime.strftime("%Y-%m-%d %H:%M") }}</td>
+            <td>
+              <a href="{{ url_for('events.event_detail', event_id=event.id) }}">
+                {{ event.title }}
+              </a>
+            </td>
+            <td>{{ event.game.name if event.game else "-" }}</td>
+            <td>{{ event.owner.name if event.owner else "-" }}</td>
+            <td>{{ event.event_type or "-" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No events yet. <a href="{{ url_for('events.create_event') }}">Create your first event</a>.</p>
+  {% endif %}
+{% endblock %}
+

@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}Events fully prepared{% endblock %}
+
+{% block content %}
+  <h2>Events fully prepared</h2>
+  <p><a href="{{ url_for('reports.index') }}">← Reports</a></p>
+  <p>Events where every task due before the event was completed on time.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Event</th>
+        <th>Date</th>
+        <th>Game</th>
+        <th>Owner</th>
+        <th>Fully prepared</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td><a href="{{ url_for('events.event_detail', event_id=row.event.id) }}">{{ row.event.title }}</a></td>
+          <td>{{ row.event.event_datetime.strftime("%Y-%m-%d") }}</td>
+          <td>{{ row.event.game.name if row.event.game else '—' }}</td>
+          <td>{{ row.event.owner.name if row.event.owner else '—' }}</td>
+          <td>{{ 'Yes' if row.fully_prepared else 'No' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

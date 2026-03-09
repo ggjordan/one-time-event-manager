@@ -1,0 +1,29 @@
+# Environment and secrets
+.env
+.venv/
+venv/
+env/
+
+# Instance data (DB + uploads) — keep local, configure on server
+instance/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Migrations (optional: remove this line if you want to commit migrations)
+# migrations/

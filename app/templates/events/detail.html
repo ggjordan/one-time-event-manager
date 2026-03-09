@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+
+{% block title %}Event: {{ event.title }}{% endblock %}
+
+{% block content %}
+  <h2>{{ event.title }}</h2>
+
+  <p><strong>Date &amp; Time:</strong> {{ event.event_datetime.strftime("%Y-%m-%d %H:%M") }}</p>
+  <p><strong>Game:</strong> {{ event.game.name if event.game else "-" }}</p>
+  <p><strong>Primary Owner:</strong> {{ event.owner.name if event.owner else "-" }} ({{ event.owner.email if event.owner else "" }})</p>
+  <p><strong>Event Type:</strong> {{ event.event_type or "-" }}</p>
+
+  {% if event.allowed_date_range %}
+    <p><strong>Allowed Date Range:</strong> {{ event.allowed_date_range }}</p>
+  {% endif %}
+
+  {% if event.scheduling_notes %}
+    <p><strong>Scheduling Notes:</strong><br />{{ event.scheduling_notes }}</p>
+  {% endif %}
+
+  {% if event.attendees is not none %}
+    <p><strong>Attendees:</strong> {{ event.attendees }}</p>
+  {% endif %}
+
+  <form action="{{ url_for('events.update_attendees', event_id=event.id) }}" method="post" style="display: inline-block; margin-bottom: 1rem;">
+    <label for="attendees">Edit attendees (if there was an error):</label>
+    <input id="attendees" name="attendees" type="number" min="0" value="{{ event.attendees or '' }}" placeholder="Number" style="width: 6rem; margin-right: 0.5rem;" />
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+
+  <p>
+    <a href="{{ url_for('events.list_events') }}">Back to Events</a>
+  </p>
+
+  <hr />
+  <h3>Tasks</h3>
+
+  {% if not tasks %}
+    <p>No tasks yet for this event.</p>
+    <form action="{{ url_for('events.regenerate_tasks', event_id=event.id) }}" method="post" style="margin-top: 0.5rem;">
+      <button type="submit" class="btn btn-primary">Re-create tasks from template</button>
+    </form>
+  {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Assignee</th>
+          <th>Due Date</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+          <tr class="task-row {{ task_timings.get(task.id) or '' }}">
+            <td>{{ task.name }}</td>
+            <td>
+              <form action="{{ url_for('events.assign_task', event_id=event.id, task_id=task.id) }}" method="post" style="display: inline;">
+                <select name="assignee_id" onchange="this.form.submit()" style="max-width: 12rem;">
+                  <option value="">— Unassigned —</option>
+                  {% for u in users %}
+                    <option value="{{ u.id }}" {{ 'selected' if task.assignee_id == u.id else '' }}>{{ u.name }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+            <td>
+              {% if task.actual_due_at %}
+                {{ task.actual_due_at.strftime("%A, %B %-d") }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if task.status == "complete" %}
+                Done {{ task.completed_at.strftime("%A, %B %-d") }}
+                {% if task.screenshot_path %}
+                  <a href="{{ url_for('main.uploaded_screenshot', filename=task.screenshot_path) }}" target="_blank" rel="noopener">
+                    <img src="{{ url_for('main.uploaded_screenshot', filename=task.screenshot_path) }}" alt="Screenshot" class="task-screenshot-thumb" />
+                  </a>
+                {% endif %}
+              {% else %}
+                {{ task.status }}
+              {% endif %}
+            </td>
+            <td>
+              {% if task.status != "complete" %}
+                <form action="{{ url_for('events.complete_task', event_id=event.id, task_id=task.id) }}" method="post" enctype="multipart/form-data" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  {% if task.id in attendance_task_ids %}
+                    <label for="attendees-{{ task.id }}" style="margin-right: 0.25rem;">Attendees:</label>
+                    <input id="attendees-{{ task.id }}" name="attendees" type="number" min="0" required placeholder="Required" style="width: 5rem;" />
+                  {% endif %}
+                  <input type="file" name="screenshot" accept="image/*" />
+                  <button type="submit" class="btn btn-primary">Mark complete</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p style="margin-top: 0.75rem;">
+      <form action="{{ url_for('events.regenerate_tasks', event_id=event.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Replace all tasks for this event with the default template? Existing task progress will be lost.');">
+        <button type="submit" class="btn">Re-create tasks from template…</button>
+      </form>
+    </p>
+  {% endif %}
+{% endblock %}
+

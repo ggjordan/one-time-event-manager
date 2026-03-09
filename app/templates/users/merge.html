@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}Merge users{% endblock %}
+
+{% block content %}
+  <h2>Merge duplicate users</h2>
+
+  <p>Select which user to merge <strong>from</strong> (will be removed) and which to merge <strong>into</strong> (will keep all data).</p>
+
+  <form method="post">
+    <div class="field">
+      <label for="from_id">Merge FROM (remove):</label>
+      <select id="from_id" name="from_id" required>
+        <option value="">— Select —</option>
+        {% for u in users %}
+          <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="to_id">Merge INTO (keep):</label>
+      <select id="to_id" name="to_id" required>
+        <option value="">— Select —</option>
+        {% for u in users %}
+          <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Merge</button>
+    <a href="{{ url_for('users.list_users') }}" class="btn">Cancel</a>
+  </form>
+{% endblock %}
