@@ -50,16 +50,16 @@ def create_app():
     app.register_blueprint(games_bp)
     app.register_blueprint(event_types_bp)
 
-    # Seed default task templates, games, and event types (skip event types if table not yet migrated)
+    # Seed default task templates, games, and event types (skip if tables not yet migrated)
     with app.app_context():
-        seed_default_task_templates()
-        seed_default_games()
         try:
+            seed_default_task_templates()
+            seed_default_games()
             seed_default_event_types()
         except Exception as e:
             from sqlalchemy.exc import OperationalError
             if isinstance(e, OperationalError) and "no such table" in str(e).lower():
-                pass  # event_type table not created yet; run flask db upgrade
+                pass  # Tables not created yet; run flask db upgrade first
             else:
                 raise
 

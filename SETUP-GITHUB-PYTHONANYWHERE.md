@@ -126,6 +126,8 @@ You need a long random string for the app. Do this **once** on your computer.
 
    When `flask db upgrade` finishes, your database tables are created. You can type `deactivate` to leave the virtualenv, or just leave the console open.
 
+   **If you get "no such table: task_template" (or similar):** The app was fixed so this doesn’t happen. Pull the latest code (`git pull`), then run `flask db upgrade` again.
+
 3. Go back to the **Web** tab. In the **Code** section, set:
    - **Source code / Directory:** `/home/YOUR_USERNAME/boardgame-events`
    - **Working directory:** leave blank (or the same path).
