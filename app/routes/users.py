@@ -1,4 +1,5 @@
 from flask import Blueprint, redirect, render_template, request, url_for, flash
+from sqlalchemy import or_
 
 from .. import db
 from ..models import User, Event, EventTask, Game
@@ -8,8 +9,13 @@ users_bp = Blueprint("users", __name__, url_prefix="/users")
 
 @users_bp.route("/")
 def list_users():
-    users = User.query.order_by(User.name.asc()).all()
-    return render_template("users/list.html", users=users)
+    search = request.args.get("search", "").strip()
+    q = User.query
+    if search:
+        term = f"%{search}%"
+        q = q.filter(or_(User.name.ilike(term), User.email.ilike(term)))
+    users = q.order_by(User.name.asc()).all()
+    return render_template("users/list.html", users=users, search=search)
 
 
 @users_bp.route("/add", methods=["GET", "POST"])

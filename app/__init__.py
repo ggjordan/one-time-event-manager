@@ -55,6 +55,7 @@ def create_app():
     from .routes.reports import reports_bp
     from .routes.games import games_bp
     from .routes.event_types import event_types_bp
+    from .routes.task_templates import task_templates_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(events_bp)
@@ -63,6 +64,7 @@ def create_app():
     app.register_blueprint(reports_bp)
     app.register_blueprint(games_bp)
     app.register_blueprint(event_types_bp)
+    app.register_blueprint(task_templates_bp)
 
     # Seed default task templates, games, and event types (skip if tables not yet migrated)
     with app.app_context():
@@ -72,8 +74,8 @@ def create_app():
             seed_default_event_types()
         except Exception as e:
             from sqlalchemy.exc import OperationalError
-            if isinstance(e, OperationalError) and "no such table" in str(e).lower():
-                pass  # Tables not created yet; run flask db upgrade first
+            if isinstance(e, OperationalError) and ("no such table" in str(e).lower() or "no such column" in str(e).lower()):
+                pass  # Schema not ready; run flask db upgrade first
             else:
                 raise
 

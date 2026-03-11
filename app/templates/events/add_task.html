@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block title %}Add task — {{ event.title }}{% endblock %}
+
+{% block content %}
+  <h2>Add custom task</h2>
+  <p><a href="{{ url_for('events.event_detail', event_id=event.id) }}">← Back to {{ event.title }}</a></p>
+
+  <form method="post" action="{{ url_for('events.add_custom_task', event_id=event.id) }}" class="task-form">
+    <div class="field">
+      <label for="name">Task name</label>
+      <input type="text" id="name" name="name" required placeholder="e.g. Custom social post" />
+    </div>
+    <div class="field">
+      <label for="task_type">Task type</label>
+      <select id="task_type" name="task_type">
+        {% for value, label in task_type_options %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>Due date</label>
+      <div>
+        <label><input type="radio" name="due_type" value="date" checked /> Specific date</label>
+        <label><input type="radio" name="due_type" value="weekday" /> Day of week before event</label>
+      </div>
+      <input type="date" id="due_date" name="due_date" />
+      <select id="due_weekday" name="due_weekday" style="display: none;">
+        {% for value, label in weekday_options %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" name="needs_notes" value="1" /> This task needs notes (e.g. info to share)</label>
+    </div>
+    <div class="field task-notes-field" style="display: none;">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" rows="3" placeholder="Optional notes or text to share"></textarea>
+    </div>
+    <div class="field">
+      <label for="assignee_id">Assignee</label>
+      <select id="assignee_id" name="assignee_id">
+        <option value="">— Unassigned —</option>
+        {% for u in users %}
+          <option value="{{ u.id }}" {{ 'selected' if u.id == event.owner_id else '' }}>{{ u.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Add task</button>
+    <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="btn btn-secondary">Cancel</a>
+  </form>
+  <script>
+    document.querySelectorAll('input[name="due_type"]').forEach(function(r) {
+      r.addEventListener('change', function() {
+        var isWeekday = document.querySelector('input[name="due_type"]:checked').value === 'weekday';
+        document.getElementById('due_date').required = !isWeekday;
+        document.getElementById('due_date').style.display = isWeekday ? 'none' : 'inline-block';
+        document.getElementById('due_weekday').style.display = isWeekday ? 'inline-block' : 'none';
+      });
+    });
+    document.querySelector('input[name="needs_notes"]').addEventListener('change', function() {
+      document.querySelector('.task-notes-field').style.display = this.checked ? 'block' : 'none';
+    });
+  </script>
+{% endblock %}

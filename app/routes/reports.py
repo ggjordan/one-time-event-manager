@@ -16,9 +16,8 @@ def _is_task_on_time(task):
 
 
 def _event_fully_prepared(event):
-    """True if every task due before the event was completed on time."""
+    """True if every task due before the event was completed on time (complete only; not_applicable/missed don't count as prepared)."""
     event_dt = event.event_datetime
-    # Event.tasks is lazy='dynamic' so use .all() to get a list
     for task in event.tasks.all():
         if task.actual_due_at and task.actual_due_at < event_dt:
             if task.status != "complete":
@@ -41,20 +40,33 @@ def by_user():
     for user in users:
         tasks = EventTask.query.filter_by(assignee_id=user.id).all()
         completed = [t for t in tasks if t.status == "complete"]
+        not_applicable = [t for t in tasks if t.status == "not_applicable"]
+        missed = [t for t in tasks if t.status == "missed_deadline"]
+        incomplete = [t for t in tasks if t.status == "incomplete"]
         on_time = [t for t in completed if _is_task_on_time(t)]
-        overdue_undone = [t for t in tasks if t.status != "complete" and t.actual_due_at and t.actual_due_at < now]
+        overdue_undone = [t for t in incomplete if t.actual_due_at and t.actual_due_at < now]
         total = len(tasks)
         completed_count = len(completed)
+        not_applicable_count = len(not_applicable)
+        missed_count = len(missed)
         on_time_count = len(on_time)
         overdue_undone_count = len(overdue_undone)
+        # Completion % and on-time % only over completed tasks; exclude not_applicable from denominator for completion rate
+        count_for_completion_rate = total - not_applicable_count
+        pct_complete = round(100 * completed_count / count_for_completion_rate, 1) if count_for_completion_rate else None
         pct_on_time = round(100 * on_time_count / completed_count, 1) if completed_count else None
+        pct_not_applicable = round(100 * not_applicable_count / total, 1) if total else None
         pct_overdue_undone = round(100 * overdue_undone_count / total, 1) if total else None
         rows.append({
             "user": user,
             "total_tasks": total,
             "completed": completed_count,
             "on_time": on_time_count,
+            "pct_complete": pct_complete,
             "pct_on_time": pct_on_time,
+            "not_applicable": not_applicable_count,
+            "pct_not_applicable": pct_not_applicable,
+            "missed_deadline": missed_count,
             "overdue_undone": overdue_undone_count,
             "pct_overdue_undone": pct_overdue_undone,
         })

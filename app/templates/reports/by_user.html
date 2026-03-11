@@ -6,16 +6,20 @@
   <h2>Tasks by user</h2>
   <p><a href="{{ url_for('reports.index') }}">← Reports</a></p>
 
-  <table>
+  <div class="report-table-wrapper">
+  <table class="report-table">
     <thead>
       <tr>
         <th>User</th>
         <th>Total tasks</th>
         <th>Completed</th>
+        <th>Completion %</th>
         <th>On time</th>
         <th>On-time %</th>
+        <th>Not applicable</th>
+        <th>Not appl. %</th>
+        <th>Missed deadline</th>
         <th>Overdue (undone)</th>
-        <th>Overdue %</th>
       </tr>
     </thead>
     <tbody>
@@ -24,12 +28,17 @@
           <td>{{ row.user.name }}</td>
           <td>{{ row.total_tasks }}</td>
           <td>{{ row.completed }}</td>
+          <td>{% if row.pct_complete is not none %}{{ row.pct_complete }}%{% else %}—{% endif %}</td>
           <td>{{ row.on_time }}</td>
           <td>{% if row.pct_on_time is not none %}{{ row.pct_on_time }}%{% else %}—{% endif %}</td>
+          <td>{{ row.not_applicable }}</td>
+          <td>{% if row.pct_not_applicable is not none %}{{ row.pct_not_applicable }}%{% else %}—{% endif %}</td>
+          <td>{{ row.missed_deadline }}</td>
           <td>{{ row.overdue_undone }}</td>
-          <td>{% if row.pct_overdue_undone is not none %}{{ row.pct_overdue_undone }}%{% else %}—{% endif %}</td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
+  </div>
+  <p class="report-notes">Completion % = completed ÷ (total − not applicable). On-time % = on-time ÷ completed. Not appl. % helps spot overuse of <span class="text-nowrap">Not applicable.</span></p>
 {% endblock %}

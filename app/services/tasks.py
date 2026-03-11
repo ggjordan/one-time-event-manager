@@ -141,7 +141,8 @@ def seed_default_task_templates() -> None:
             name=data["name"],
             group=data["group"],
             lead_days_before_event=data["lead_days_before_event"],
-            order_index=data["order_index"],
+            order_index=data.get("order_index", 0),
+            requires_drive_link=(data["group"] == "assets"),
         )
         db.session.add(tmpl)
 
@@ -156,16 +157,29 @@ def generate_tasks_for_event(event: Event) -> None:
 
     templates = (
         TaskTemplate.query.filter_by(is_active=True)
-        .order_by(TaskTemplate.order_index.asc())
+        .order_by(
+            TaskTemplate.lead_days_before_event.desc(),
+            TaskTemplate.name.asc(),
+        )
         .all()
     )
 
     for tmpl in templates:
-        # Ideal due date is event date/time minus lead_days_before_event
-        ideal_due = event_dt - timedelta(days=tmpl.lead_days_before_event)
+        # Filter by game: if template has games assigned, only include for those games
+        if tmpl.games.count() > 0:
+            if event.game_id not in [g.id for g in tmpl.games]:
+                continue
 
-        # If ideal due is already in the past, shift to "now" to allow on-time
-        # completion for late-created events.
+        if tmpl.due_weekday is not None:
+            # Due on specific weekday before event (0=Monday, 6=Sunday)
+            d = event_dt.date()
+            days_back = (d.weekday() - tmpl.due_weekday + 7) % 7
+            if days_back == 0:
+                days_back = 7  # same weekday as event → use previous week
+            ideal_due = datetime.combine(d - timedelta(days=days_back), event_dt.time())
+        else:
+            ideal_due = event_dt - timedelta(days=tmpl.lead_days_before_event)
+
         actual_due = ideal_due if ideal_due >= now else now
 
         task = EventTask(

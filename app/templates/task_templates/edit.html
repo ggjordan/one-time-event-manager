@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit template: {{ template.name }}{% endblock %}
+
+{% block content %}
+  <h2>Edit task template</h2>
+  <p><a href="{{ url_for('task_templates.list_templates') }}" class="link-back">← Back to task templates</a></p>
+
+  <form method="post" action="{{ url_for('task_templates.edit_template', template_id=template.id) }}" class="template-form">
+    <section class="form-section">
+      <h3 class="form-section-title">Basic information</h3>
+      <div class="form-section-fields">
+        <div class="field">
+          <label for="name">Task name</label>
+          <input type="text" id="name" name="name" value="{{ template.name }}" required />
+        </div>
+        <div class="field">
+          <label for="group">Task type</label>
+          <select id="group" name="group" required>
+            {% for value, label in group_options %}
+              <option value="{{ value }}" {{ 'selected' if value == current_task_type else '' }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h3 class="form-section-title">When is this task due?</h3>
+      <p class="form-section-hint">Choose one option. The task will be due this many days (or on this weekday) before the event.</p>
+      <div class="due-date-card">
+        <div class="due-date-option">
+          <label class="due-date-option-label">
+            <input type="radio" name="due_type" value="days" {{ 'checked' if template.due_weekday is none else '' }} />
+            <span>Days before event</span>
+          </label>
+          <input type="number" id="lead_days_before_event" name="lead_days_before_event" value="{{ template.lead_days_before_event }}" min="-365" max="365" class="due-date-input" />
+        </div>
+        <div class="due-date-option">
+          <label class="due-date-option-label">
+            <input type="radio" name="due_type" value="weekday" {{ 'checked' if template.due_weekday is not none else '' }} />
+            <span>Specific day of week before event</span>
+          </label>
+          <select id="due_weekday" name="due_weekday" class="due-date-input">
+            {% for value, label in weekday_options %}
+              <option value="{{ value }}" {{ 'selected' if template.due_weekday == value else '' }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h3 class="form-section-title">Task requirements</h3>
+      <p class="form-section-hint">When completing this task, users will be prompted for the following (if checked).</p>
+      <div class="requirements-row">
+        <label class="requirement-checkbox">
+          <input type="checkbox" id="requires_notes" name="requires_notes" value="1" {{ 'checked' if template.requires_notes else '' }} />
+          <span>Task requires notes</span>
+        </label>
+        <label class="requirement-checkbox">
+          <input type="checkbox" id="requires_drive_link" name="requires_drive_link" value="1" {{ 'checked' if template.requires_drive_link else '' }} />
+          <span>Task requires image or file (drive link)</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h3 class="form-section-title">Apply to games</h3>
+      <p class="form-section-hint">Leave empty to apply this template to all games. Select one or more to limit it to those games.</p>
+      <div class="field">
+        <label for="game_ids" class="sr-only">Games</label>
+        <select id="game_ids" name="game_ids" multiple size="6" class="games-multiselect">
+          {% set template_game_ids = template.games|map(attribute='id')|list %}
+          {% for g in games %}
+            <option value="{{ g.id }}" {{ 'selected' if g.id in template_game_ids else '' }}>{{ g.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <a href="{{ url_for('task_templates.list_templates') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+  <script>
+    (function() {
+      function toggleDue() {
+        var isWeekday = document.querySelector('input[name="due_type"]:checked').value === 'weekday';
+        document.getElementById('lead_days_before_event').style.display = isWeekday ? 'none' : 'inline-block';
+        document.getElementById('due_weekday').style.display = isWeekday ? 'inline-block' : 'none';
+      }
+      document.querySelectorAll('input[name="due_type"]').forEach(function(r) {
+        r.addEventListener('change', toggleDue);
+      });
+      toggleDue();
+    })();
+  </script>
+{% endblock %}

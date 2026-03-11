@@ -9,37 +9,81 @@
     <p><a href="{{ url_for('tasks.list_tasks') }}">← Back to all tasks</a></p>
   {% endif %}
 
-  <div class="tasks-controls">
-    {% if assignee_links %}
-      <p><strong>Jump to:</strong>
-        {% for uid, uname in assignee_links %}
-          <a href="{{ url_for('tasks.tasks_by_assignee', user_id=uid, status=status_filter, group_by=group_by, sort_by=sort_by, sort_dir=sort_dir) }}">{{ uname }}</a>
-          {% if not loop.last %} · {% endif %}
-        {% endfor %}
-      </p>
-    {% endif %}
-
-    <p>
-      <strong>Status:</strong>
-      {% for value, label in status_filter_options %}
-        {% if assignee_id %}
-          <a href="{{ url_for('tasks.tasks_by_assignee', user_id=assignee_id, status=value, group_by=group_by, sort_by=sort_by, sort_dir=sort_dir) }}" class="{{ 'active' if status_filter == value else '' }}">{{ label }}</a>
-        {% else %}
-          <a href="{{ url_for('tasks.list_tasks', status=value, group_by=group_by, sort_by=sort_by, sort_dir=sort_dir) }}" class="{{ 'active' if status_filter == value else '' }}">{{ label }}</a>
-        {% endif %}
-        {% if not loop.last %} · {% endif %}
-      {% endfor %}
-      &nbsp;|&nbsp;
-      <strong>Group by:</strong>
-      {% for value, label in group_by_options %}
-        {% if assignee_id %}
-          <a href="{{ url_for('tasks.tasks_by_assignee', user_id=assignee_id, status=status_filter, group_by=value, sort_by=sort_by, sort_dir=sort_dir) }}" class="{{ 'active' if group_by == value else '' }}">{{ label }}</a>
-        {% else %}
-          <a href="{{ url_for('tasks.list_tasks', status=status_filter, group_by=value, sort_by=sort_by, sort_dir=sort_dir) }}" class="{{ 'active' if group_by == value else '' }}">{{ label }}</a>
-        {% endif %}
-        {% if not loop.last %} · {% endif %}
-      {% endfor %}
-    </p>
+  <div class="tasks-controls task-filters">
+    <form method="get" action="{{ url_for('tasks.list_tasks') }}" class="filter-form unified-filters">
+      <div class="filter-field">
+        <label for="search">Search:</label>
+        <input type="text" id="search" name="search" value="{{ search }}" placeholder="Task or event" />
+      </div>
+      <div class="filter-field">
+        <label for="assignee_id">Assignee:</label>
+        <select id="assignee_id" name="assignee_id">
+          <option value="">All</option>
+          {% for uid, uname in assignee_links %}
+            <option value="{{ uid }}" {{ 'selected' if assignee_id == uid else '' }}>{{ uname }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="status">Status:</label>
+        <select id="status" name="status">
+          {% for value, label in status_filter_options %}
+            <option value="{{ value }}" {{ 'selected' if status_filter == value else '' }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="due_within">Due within:</label>
+        <select id="due_within" name="due_within">
+          {% for value, label in due_within_options %}
+            <option value="{{ value }}" {{ 'selected' if due_within == value else '' }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="due_date_from">From:</label>
+        <input type="date" id="due_date_from" name="due_date_from" value="{{ due_date_from }}" />
+      </div>
+      <div class="filter-field">
+        <label for="due_date_to">To:</label>
+        <input type="date" id="due_date_to" name="due_date_to" value="{{ due_date_to }}" />
+      </div>
+      <div class="filter-field">
+        <label for="task_type">Task type:</label>
+        <select id="task_type" name="task_type">
+          <option value="">All</option>
+          {% for value, label in task_type_options %}
+            <option value="{{ value }}" {{ 'selected' if task_type_filter == value else '' }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="group_by">Group by:</label>
+        <select id="group_by" name="group_by">
+          {% for value, label in group_by_options %}
+            <option value="{{ value }}" {{ 'selected' if group_by == value else '' }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="sort_by">Sort by:</label>
+        <select id="sort_by" name="sort_by">
+          {% for col_value, col_label in sort_columns %}
+            <option value="{{ col_value }}" {{ 'selected' if sort_by == col_value else '' }}>{{ col_label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="sort_dir">Order:</label>
+        <select id="sort_dir" name="sort_dir">
+          <option value="asc" {{ 'selected' if sort_dir == 'asc' else '' }}>Asc</option>
+          <option value="desc" {{ 'selected' if sort_dir == 'desc' else '' }}>Desc</option>
+        </select>
+      </div>
+      <div class="filter-field filter-apply">
+        <button type="submit" class="btn btn-primary">Apply</button>
+      </div>
+    </form>
   </div>
 
   {% for key, data in group_list %}
@@ -52,15 +96,12 @@
               {% for col_value, col_label in sort_columns %}
                 <th>
                   {% set next_dir = 'desc' if sort_by == col_value and sort_dir == 'asc' else 'asc' %}
-                  {% if assignee_id %}
-                    <a href="{{ url_for('tasks.tasks_by_assignee', user_id=assignee_id, status=status_filter, group_by=group_by, sort_by=col_value, sort_dir=next_dir) }}" class="sort-link {{ 'active' if sort_by == col_value else '' }}">
-                  {% else %}
-                    <a href="{{ url_for('tasks.list_tasks', status=status_filter, group_by=group_by, sort_by=col_value, sort_dir=next_dir) }}" class="sort-link {{ 'active' if sort_by == col_value else '' }}">
-                  {% endif %}
+                  <a href="{{ url_for('tasks.list_tasks', status=status_filter, group_by=group_by, sort_by=col_value, sort_dir=next_dir, search=search, due_within=due_within, task_type=task_type_filter, due_date_from=due_date_from, due_date_to=due_date_to, assignee_id=assignee_id or '') }}" class="sort-link {{ 'active' if sort_by == col_value else '' }}">
                     {{ col_label }}{% if sort_by == col_value %} {{ '↑' if sort_dir == 'asc' else '↓' }}{% endif %}
                   </a>
                 </th>
               {% endfor %}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -72,20 +113,63 @@
                 </td>
                 <td>{{ task.event.game.name if task.event and task.event.game else '-' }}</td>
                 <td>
+                  {% set days = days_until_due_fn(task) %}
+                  {% if days is not none %}
+                    {{ days }} day{{ 's' if days != 1 else '' }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
                   {% if task.actual_due_at %}
                     {{ task.actual_due_at.strftime("%A, %B %-d") }}
                   {% else %}
-                    -
+                    —
                   {% endif %}
                 </td>
                 <td>
                   {% if task.status == "complete" %}
-                    Done {{ task.completed_at.strftime("%A, %B %-d") }}
+                    Complete {{ task.completed_at.strftime("%b %-d") if task.completed_at else '' }}
+                  {% elif task.status == "not_applicable" %}
+                    Not applicable
+                  {% elif task.status == "missed_deadline" %}
+                    Missed deadline
                   {% else %}
-                    {{ task.status }}
+                    Incomplete
                   {% endif %}
                 </td>
                 <td>{{ task.assignee.name if task.assignee else '-' }}</td>
+                <td>
+                  {% if task.status == "incomplete" %}
+                    <form action="{{ url_for('tasks.set_task_status', task_id=task.id) }}" method="post" class="task-status-form task-list-status-form">
+                      <input type="hidden" name="list_search" value="{{ search }}" />
+                      <input type="hidden" name="list_assignee_id" value="{{ assignee_id or '' }}" />
+                      <input type="hidden" name="list_status" value="{{ status_filter }}" />
+                      <input type="hidden" name="list_due_within" value="{{ due_within }}" />
+                      <input type="hidden" name="list_due_date_from" value="{{ due_date_from }}" />
+                      <input type="hidden" name="list_due_date_to" value="{{ due_date_to }}" />
+                      <input type="hidden" name="list_task_type" value="{{ task_type_filter }}" />
+                      <input type="hidden" name="list_group_by" value="{{ group_by }}" />
+                      <input type="hidden" name="list_sort_by" value="{{ sort_by }}" />
+                      <input type="hidden" name="list_sort_dir" value="{{ sort_dir }}" />
+                      <select name="status">
+                        <option value="complete">Complete</option>
+                        <option value="not_applicable">Not applicable</option>
+                        <option value="missed_deadline">Missed deadline</option>
+                      </select>
+                      {% if "record attendance" in (task.name or '')|lower %}
+                        <input type="number" name="attendees" placeholder="Attendees" min="0" title="Required for attendance task" />
+                      {% endif %}
+                      {% if task.template and task.template.requires_drive_link %}
+                        <input type="url" name="drive_link" placeholder="Link (for Complete)" title="Required when marking Complete" />
+                      {% endif %}
+                      <input type="text" name="notes" placeholder="Notes" />
+                      <button type="submit" class="btn btn-primary">Update</button>
+                    </form>
+                  {% else %}
+                    <a href="{{ url_for('events.event_detail', event_id=task.event_id) }}">View event</a>
+                  {% endif %}
+                </td>
               </tr>
             {% endfor %}
           </tbody>

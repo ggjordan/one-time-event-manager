@@ -9,6 +9,24 @@
     <a href="{{ url_for('events.create_event') }}" class="btn btn-primary">Create Event</a>
   </p>
 
+  <form method="get" action="{{ url_for('events.list_events') }}" class="filter-form tasks-controls">
+    <div class="filter-field">
+      <label for="search">Search (contains):</label>
+      <input type="text" id="search" name="search" value="{{ search }}" placeholder="Title, owner, game, type" />
+    </div>
+    <div class="filter-field">
+      <label for="date_from">Date from:</label>
+      <input type="date" id="date_from" name="date_from" value="{{ date_from }}" />
+    </div>
+    <div class="filter-field">
+      <label for="date_to">to:</label>
+      <input type="date" id="date_to" name="date_to" value="{{ date_to }}" />
+    </div>
+    <div class="filter-field filter-apply">
+      <button type="submit" class="btn btn-primary">Apply filters</button>
+    </div>
+  </form>
+
   {% if events %}
     <table>
       <thead>

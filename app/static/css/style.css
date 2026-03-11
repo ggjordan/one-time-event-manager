@@ -291,6 +291,42 @@ a:hover {
   margin-bottom: 1rem;
 }
 
+.filter-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.6rem 1rem;
+  align-items: end;
+  margin-bottom: 0.75rem;
+}
+
+.filter-form .filter-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.filter-form .filter-field label {
+  margin: 0;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.filter-form .filter-field input[type="text"],
+.filter-form .filter-field input[type="date"],
+.filter-form .filter-field input[type="url"],
+.filter-form .filter-field select {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.4rem 0.5rem;
+}
+
+.filter-form .filter-field.filter-apply {
+  align-items: flex-end;
+}
+
 .tasks-controls a.active {
   font-weight: 700;
 }
@@ -333,6 +369,116 @@ form.inline-form input[type="number"] {
 form.inline-form select {
   max-width: 12rem;
 }
+
+.task-status-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.task-status-form label { margin: 0; font-weight: 500; }
+.task-notes { font-size: 0.9rem; color: var(--text-muted); }
+.task-list-status-form { max-width: 100%; }
+.task-list-status-form input[type="url"],
+.task-list-status-form input[type="text"] { max-width: 140px; }
+.task-list-status-form input[type="number"] { max-width: 5rem; }
+.task-list-status-form select { max-width: 120px; }
+.checkbox-list { display: flex; flex-wrap: wrap; gap: 0 1rem; }
+.checkbox-list label { margin: 0; font-weight: 500; }
+
+/* Task template form: due date rows and inline checkboxes */
+.due-date-options { display: flex; flex-direction: column; gap: 0.5rem; }
+.due-date-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.due-date-row label { margin: 0; font-weight: 500; }
+.field-inline { display: flex; align-items: center; gap: 0.5rem; }
+.field-inline .label-with-checkbox { margin-bottom: 0; }
+.field-inline input[type="checkbox"] { width: auto; max-width: none; }
+
+/* Template form: sectioned layout */
+.template-form { max-width: 36rem; }
+.form-section { margin-bottom: 2rem; }
+.form-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.35rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.form-section-hint {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.45;
+}
+.form-section-fields { display: flex; flex-direction: column; gap: 1rem; }
+.due-date-card {
+  background: #f8f6f2;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.due-date-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.due-date-option-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 12rem;
+}
+.due-date-option-label input[type="radio"] { flex-shrink: 0; }
+.due-date-input {
+  width: auto;
+  min-width: 8rem;
+  max-width: 12rem;
+  padding: 0.4rem 0.6rem;
+}
+.requirements-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+}
+.requirement-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-weight: 500;
+  cursor: pointer;
+}
+.requirement-checkbox input[type="checkbox"] { width: auto; max-width: none; }
+.games-multiselect {
+  width: 100%;
+  max-width: 20rem;
+  padding: 0.35rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
+  background: var(--bg-card);
+}
+.form-actions { display: flex; gap: 0.75rem; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.link-back { display: inline-block; margin-bottom: 1rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+.report-notes { font-size: 0.9rem; color: var(--text-muted); margin-top: 1rem; }
+.report-notes .text-nowrap { white-space: nowrap; }
+
+/* Report tables: keep headers on one line and consistent density */
+.report-table-wrapper { overflow-x: auto; margin-top: 1rem; }
+table.report-table { font-size: 0.9rem; width: 100%; min-width: max-content; table-layout: auto; }
+table.report-table th { white-space: nowrap; padding: 0.5rem 0.65rem; }
+table.report-table td { padding: 0.5rem 0.65rem; }
 
 form.inline-form label {
   margin: 0;

@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block title %}Task templates{% endblock %}
+
+{% block content %}
+  <h2>Default task templates</h2>
+  <p>These tasks are added to each new event. Edit lead days (days before the event the task is due) and add or deactivate templates.</p>
+  <p>
+    <a href="{{ url_for('task_templates.add_template') }}" class="btn btn-primary">Add template</a>
+  </p>
+
+  {% if templates %}
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Due</th>
+          <th>Requires notes</th>
+          <th>Requires link</th>
+          <th>Games</th>
+          <th>Active</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in templates %}
+          <tr>
+            <td>{{ t.name }}</td>
+            <td>{{ get_task_type_label(get_task_type(t.group)) }}</td>
+            <td>
+              {% if t.due_weekday is not none %}
+                {{ ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][t.due_weekday] }} before event
+              {% else %}
+                {{ t.lead_days_before_event }} days before
+              {% endif %}
+            </td>
+            <td>{{ 'Yes' if t.requires_notes else 'No' }}</td>
+            <td>{{ 'Yes' if t.requires_drive_link else 'No' }}</td>
+            <td>{% if t.games.count() %}{% for g in t.games %}{{ g.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}All{% endif %}</td>
+            <td>{{ 'Yes' if t.is_active else 'No' }}</td>
+            <td>
+              <a href="{{ url_for('task_templates.edit_template', template_id=t.id) }}">Edit</a>
+              {% if t.is_active %}
+                <form action="{{ url_for('task_templates.deactivate_template', template_id=t.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Deactivate this template? It will not be added to new events.');">
+                  <button type="submit" class="btn btn-secondary">Deactivate</button>
+                </form>
+              {% else %}
+                <form action="{{ url_for('task_templates.activate_template', template_id=t.id) }}" method="post" style="display: inline;">
+                  <button type="submit" class="btn btn-secondary">Activate</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No task templates yet. <a href="{{ url_for('task_templates.add_template') }}">Add one</a> or run the app to seed defaults.</p>
+  {% endif %}
+{% endblock %}
