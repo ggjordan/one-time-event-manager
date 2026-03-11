@@ -7,7 +7,7 @@
 
   <p>
     <a href="{{ url_for('games.add_game') }}" class="btn btn-primary">Add game</a>
-    <a href="{{ url_for('games.merge_games') }}" class="btn">Merge duplicates</a>
+    <a href="{{ url_for('games.merge_games') }}" class="btn btn-secondary">Merge duplicates</a>
   </p>
   {% if games %}
     <table>

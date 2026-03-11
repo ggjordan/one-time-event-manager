@@ -19,7 +19,8 @@ def create_app():
         pass
 
     secret = os.environ.get("SECRET_KEY", "dev-secret-key")
-    if not app.debug and secret == "dev-secret-key":
+    # Require a real SECRET_KEY only when explicitly in production (so local run works without .env)
+    if os.environ.get("FLASK_ENV") == "production" and secret == "dev-secret-key":
         raise RuntimeError(
             "Set SECRET_KEY in the environment or in a .env file in the project root. "
             "Do not run in production with the default dev-secret-key."

@@ -3,13 +3,31 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-  <h1>Event Planning App</h1>
-  <p>This is the starting point for your event planning and coordination tool.</p>
-
-  <p>
-    Start by creating an event on the
-    <a href="{{ url_for('events.list_events') }}">Events</a> page.
+  <h1>Event Planning</h1>
+  <p class="home-intro">
+    Manage events, tasks, and your team from one place. Start by creating an event, then assign tasks and track progress.
   </p>
+
+  <div class="home-links">
+    <a href="{{ url_for('events.list_events') }}" class="home-link-card">
+      Events
+      <span>Create and manage upcoming events</span>
+    </a>
+    <a href="{{ url_for('tasks.list_tasks') }}" class="home-link-card">
+      Tasks
+      <span>View and filter tasks by assignee</span>
+    </a>
+    <a href="{{ url_for('reports.index') }}" class="home-link-card">
+      Reports
+      <span>By user, preparation, attendance</span>
+    </a>
+    <a href="{{ url_for('games.list_games') }}" class="home-link-card">
+      Games
+      <span>Manage games and merge duplicates</span>
+    </a>
+    <a href="{{ url_for('users.list_users') }}" class="home-link-card">
+      Team
+      <span>Users, merge, edit</span>
+    </a>
+  </div>
 {% endblock %}
-
-

@@ -170,10 +170,12 @@ PythonAnywhere sometimes hides or omits the "Environment variables" box on the W
 
    ```
    SECRET_KEY=PASTE_YOUR_SECRET_KEY_HERE
+   FLASK_ENV=production
    ```
 
    Example (with a fake key): `SECRET_KEY=a1b2c3d4e5f6...`  
-   No spaces around the `=`. No quotes around the value.
+   Add `FLASK_ENV=production` on a second line so the app requires a real SECRET_KEY in production.  
+   No spaces around the `=`. No quotes around values.
 
 4. Save and exit: press **Ctrl+O**, **Enter**, then **Ctrl+X**.
 5. Done. The WSGI file (Step 3.5) already loads this file; reload your web app after saving.
