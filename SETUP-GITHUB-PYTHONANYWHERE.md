@@ -23,14 +23,14 @@ Follow these steps in order. Replace anything in CAPS with your own details.
 
 1. Log in to GitHub.
 2. Click the **+** (top right) → **New repository**.
-3. **Repository name:** e.g. `boardgame-events` (no spaces).
+3. **Repository name:** e.g. `one-time-event-manager` (no spaces).
 4. Leave **Public** selected.
 5. **Do not** check "Add a README" or "Add .gitignore" — we already have files.
 6. Click **Create repository**.
 
 ## Step 1.4 — Push your project from your computer
 
-Open **Terminal** (Mac) or **Git Bash** (Windows) and run these commands **one at a time**. Replace `YOUR_GITHUB_USERNAME` and `boardgame-events` if you used a different repo name.
+Open **Terminal** (Mac) or **Git Bash** (Windows) and run these commands **one at a time**. Replace `YOUR_GITHUB_USERNAME` and `one-time-event-manager` if you used a different repo name.
 
 **Go to your project folder:**
 ```bash
@@ -50,7 +50,7 @@ git commit -m "Initial commit"
 
 **Connect to GitHub and push (use YOUR repo URL from GitHub):**
 ```bash
-git remote add origin https://github.com/YOUR_GITHUB_USERNAME/boardgame-events.git
+git remote add origin https://github.com/YOUR_GITHUB_USERNAME/one-time-event-manager.git
 git branch -M main
 git push -u origin main
 ```
@@ -93,12 +93,12 @@ You need a long random string for the app. Do this **once** on your computer.
 3. Click **$ Bash** (opens a Linux terminal).
 4. **Clone your GitHub repo** (replace with your GitHub username and repo name):
    ```bash
-   git clone https://github.com/YOUR_GITHUB_USERNAME/boardgame-events.git
+   git clone https://github.com/YOUR_GITHUB_USERNAME/one-time-event-manager.git
    ```
    Enter your GitHub username and (if asked) your Personal Access Token as the password.
-5. When it finishes, you’ll have a folder named `boardgame-events`. Check:
+5. When it finishes, you’ll have a folder named `one-time-event-manager`. Check:
    ```bash
-   ls boardgame-events
+   ls one-time-event-manager
    ```
    You should see `app`, `wsgi.py`, `requirements.txt`, etc.
 
@@ -108,16 +108,16 @@ You need a long random string for the app. Do this **once** on your computer.
 2. Click **Add a new web app**.
 3. Click **Next**.
 4. Choose **Manual configuration** (not the Flask wizard). Click **Next**.
-5. Choose **Python 3.10** (or 3.11). Click **Next**.
+5. Choose **Python 3.10**, **3.11**, **3.12**, or **3.13** — use the **same version** you used (or will use) for your virtualenv. Click **Next**.
 6. Your app will be created. You’ll see a page with **Code**, **WSGI configuration file**, **Virtualenv**, etc.
 
 ## Step 3.4 — Create a virtualenv and install dependencies
 
 1. Click the **Consoles** tab. Click **$ Bash** to open a new console.
-2. Run these commands **one at a time** (replace `YOUR_USERNAME` with your PythonAnywhere username):
+2. Run these commands **one at a time** (replace `YOUR_USERNAME` with your PythonAnywhere username). Use the same Python version you selected for the web app (e.g. 3.13):
 
    ```bash
-   cd ~/boardgame-events
+   cd ~/one-time-event-manager
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
@@ -129,24 +129,26 @@ You need a long random string for the app. Do this **once** on your computer.
    **If you get "no such table: task_template" (or similar):** The app was fixed so this doesn’t happen. Pull the latest code (`git pull`), then run `flask db upgrade` again.
 
 3. Go back to the **Web** tab. In the **Code** section, set:
-   - **Source code / Directory:** `/home/YOUR_USERNAME/boardgame-events`
+   - **Source code / Directory:** `/home/YOUR_USERNAME/one-time-event-manager`
    - **Working directory:** leave blank (or the same path).
 4. Scroll to **Virtualenv**. Click **Enter path to a virtualenv**.
-5. Type: `/home/YOUR_USERNAME/boardgame-events/venv` and click the green check (or Save).  
+5. Type: `/home/YOUR_USERNAME/one-time-event-manager/venv` and click the green check (or Save).  
    This tells PythonAnywhere to use the venv you just created.
 
 ## Step 3.5 — Edit the WSGI file
 
 1. On the **Web** tab, find **WSGI configuration file**. Click the link (e.g. `/var/www/YOUR_USERNAME_pythonanywhere_com_wsgi.py`).
 2. **Delete everything** in the file.
-3. **Paste exactly this** (change `YOUR_USERNAME` and `boardgame-events` if your folder name is different):
+3. **Paste exactly this** — use **straight quotes** (not curly/smart quotes). Replace `YOUR_USERNAME` and `one-time-event-manager` with your actual PythonAnywhere username and project folder name. Do **not** copy the line that says `` ```python `` or `` ``` ``.
 
    ```python
    import sys
-   path = '/home/YOUR_USERNAME/boardgame-events'
-   if path not in sys.path:
-       sys.path.insert(0, path)
-
+   import os
+   project_home = "/home/YOUR_USERNAME/one-time-event-manager"
+   if project_home not in sys.path:
+       sys.path.insert(0, project_home)
+   from dotenv import load_dotenv
+   load_dotenv(os.path.join(project_home, ".env"))
    from wsgi import application
    ```
 
@@ -154,11 +156,29 @@ You need a long random string for the app. Do this **once** on your computer.
 
 ## Step 3.6 — Set the SECRET_KEY
 
-1. On the **Web** tab, scroll to **Environment variables** (or **Code** section — it may say "Environment").
-2. Click **Enter environment variable** (or the **Add a new variable** / edit area).
-3. **Variable name:** `SECRET_KEY`  
-   **Value:** paste the long string you generated in Part 2 (the output of `secrets.token_hex(32)`).
-4. Save (green check or Save button).
+PythonAnywhere sometimes hides or omits the "Environment variables" box on the Web tab. Using a **.env file** in your project always works.
+
+1. On PythonAnywhere, open the **Consoles** tab and click **$ Bash** (or use an existing console).
+2. Run (replace with your username and project folder if different):
+
+   ```bash
+   cd ~/one-time-event-manager
+   nano .env
+   ```
+
+3. In the editor, type this on a **single line** (paste your real secret key where it says `PASTE_YOUR_SECRET_KEY_HERE`):
+
+   ```
+   SECRET_KEY=PASTE_YOUR_SECRET_KEY_HERE
+   ```
+
+   Example (with a fake key): `SECRET_KEY=a1b2c3d4e5f6...`  
+   No spaces around the `=`. No quotes around the value.
+
+4. Save and exit: press **Ctrl+O**, **Enter**, then **Ctrl+X**.
+5. Done. The WSGI file (Step 3.5) already loads this file; reload your web app after saving.
+
+**If your Web tab has an "Environment variables" or "Code" section with a field to add variables,** you can use that instead: set **Variable name** to `SECRET_KEY` and **Value** to your long secret string, then Save. If you do that, you can remove the two `load_dotenv` lines from the WSGI file.
 
 ## Step 3.7 — Reload the app
 
@@ -176,8 +196,8 @@ You should see your app. If you get an error, check the **Error log** on the Web
 |------|--------|
 | Your PythonAnywhere username | Top-right of the dashboard; also in the URL |
 | Your app URL | https://YOUR_USERNAME.pythonanywhere.com |
-| Project folder on PA | `/home/YOUR_USERNAME/boardgame-events` |
-| Virtualenv path | `/home/YOUR_USERNAME/boardgame-events/venv` |
+| Project folder on PA | `/home/YOUR_USERNAME/one-time-event-manager` |
+| Virtualenv path | `/home/YOUR_USERNAME/one-time-event-manager/venv` |
 | SECRET_KEY | Web tab → Environment variables |
 | Reload after changes | Web tab → green Reload button |
 | Error messages | Web tab → Error log |
@@ -187,8 +207,9 @@ You should see your app. If you get an error, check the **Error log** on the Web
 # If something goes wrong
 
 - **502 / 504 error:** Check the **Error log** on the Web tab. Often it’s a typo in the WSGI path or a missing package — run `pip install -r requirements.txt` in the virtualenv again.
-- **"No module named 'app'":** The `path` in the WSGI file must point to the folder that contains `app` and `wsgi.py` (e.g. `/home/YOUR_USERNAME/boardgame-events`).
+- **Syntax error in WSGI file:** Make sure you only pasted the 5 lines of code (from `import sys` through `from wsgi import application`). Do not include `` ```python `` or `` ``` ``. Use straight quotes `"` not curly quotes. Replace `YOUR_USERNAME` and `one-time-event-manager` with your real username and folder name.
+- **"No module named 'app'":** The `project_home` path in the WSGI file must point to the folder that contains `app` and `wsgi.py` (e.g. `/home/YOUR_USERNAME/one-time-event-manager`).
 - **"application" or "app" errors:** The WSGI file must end with `from wsgi import application` (no `:app`).
-- **Database / table errors:** In a Bash console: `cd ~/boardgame-events`, `source venv/bin/activate`, then `flask db upgrade`.
+- **Database / table errors:** In a Bash console: `cd ~/one-time-event-manager`, `source venv/bin/activate`, then `flask db upgrade`.
 
-Once this works, you can edit code on your computer, then run `git add .`, `git commit -m "Your message"`, `git push`, and on PythonAnywhere run `cd ~/boardgame-events && git pull` and click **Reload** on the Web tab to update the live site.
+Once this works, you can edit code on your computer, then run `git add .`, `git commit -m "Your message"`, `git push`, and on PythonAnywhere run `cd ~/one-time-event-manager && git pull` and click **Reload** on the Web tab to update the live site.

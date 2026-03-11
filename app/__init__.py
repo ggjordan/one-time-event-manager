@@ -10,9 +10,22 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
 
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
-
     base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    # Load .env from project root so SECRET_KEY is set (e.g. on PythonAnywhere)
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(os.path.join(base_dir, ".env"))
+    except ImportError:
+        pass
+
+    secret = os.environ.get("SECRET_KEY", "dev-secret-key")
+    if not app.debug and secret == "dev-secret-key":
+        raise RuntimeError(
+            "Set SECRET_KEY in the environment or in a .env file in the project root. "
+            "Do not run in production with the default dev-secret-key."
+        )
+    app.config["SECRET_KEY"] = secret
+
     instance_dir = os.path.join(base_dir, "instance")
     os.makedirs(instance_dir, exist_ok=True)
     default_db_path = os.path.join(instance_dir, "app.db")
