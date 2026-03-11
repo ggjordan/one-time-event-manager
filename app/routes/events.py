@@ -184,6 +184,7 @@ def event_detail(event_id: int):
         sort_options=EVENT_SORT_OPTIONS,
         search=search,
         assignee_id=assignee_id,
+        get_task_type=get_task_type,
     )
 
 

@@ -106,7 +106,7 @@
           </thead>
           <tbody>
             {% for task in data.tasks %}
-              <tr>
+              <tr class="task-row task-type-{{ get_task_type(task.group) }}">
                 <td>{{ task.name }}</td>
                 <td>
                   <a href="{{ url_for('events.event_detail', event_id=task.event_id) }}">{{ task.event.title if task.event else '-' }}</a>

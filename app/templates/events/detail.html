@@ -109,7 +109,7 @@
       </thead>
       <tbody>
         {% for task in tasks %}
-          <tr class="task-row {{ task_timings.get(task.id) or '' }}">
+          <tr class="task-row task-type-{{ get_task_type(task.group) }} {{ task_timings.get(task.id) or '' }}">
             <td>{{ task.name }}</td>
             <td>
                 <form action="{{ url_for('events.assign_task', event_id=event.id, task_id=task.id) }}" method="post" class="inline-form">

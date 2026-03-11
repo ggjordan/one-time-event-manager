@@ -215,3 +215,23 @@ You should see your app. If you get an error, check the **Error log** on the Web
 - **Database / table errors:** In a Bash console: `cd ~/one-time-event-manager`, `source venv/bin/activate`, then `flask db upgrade`.
 
 Once this works, you can edit code on your computer, then run `git add .`, `git commit -m "Your message"`, `git push`, and on PythonAnywhere run `cd ~/one-time-event-manager && git pull` and click **Reload** on the Web tab to update the live site.
+
+---
+
+# After git pull (updating the live app)
+
+Whenever you run `git pull` on PythonAnywhere, run these steps so dependencies and the database stay in sync:
+
+1. Open the **Consoles** tab and start a **$ Bash** console (or use an existing one).
+2. Run these commands **one at a time** (replace `one-time-event-manager` with your project folder name if different):
+
+   ```bash
+   cd ~/one-time-event-manager
+   source venv/bin/activate
+   pip install -r requirements.txt
+   flask db upgrade
+   ```
+
+3. Go to the **Web** tab and click the green **Reload** button so the app uses the new code and database.
+
+That’s it. New packages from `requirements.txt` are installed, any new migrations are applied, and the web app is reloaded.

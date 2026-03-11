@@ -255,6 +255,7 @@ def list_tasks():
         due_date_to=request.args.get("due_date_to", ""),
         task_type_filter=args["task_type_filter"],
         days_until_due_fn=_days_until_due,
+        get_task_type=get_task_type,
     )
 
 
@@ -321,6 +322,7 @@ def tasks_by_assignee(user_id):
         due_date_to=request.args.get("due_date_to", ""),
         task_type_filter=args["task_type_filter"],
         days_until_due_fn=_days_until_due,
+        get_task_type=get_task_type,
     )
 
 

@@ -246,6 +246,32 @@ tbody tr:last-child td {
   background-color: #f8d4d4 !important;
 }
 
+/* Task type row colors (where tasks are listed) */
+.task-row.task-type-online_store {
+  background-color: #d4e8f7;
+}
+.task-row.task-type-online_store:hover {
+  background-color: #c0ddf0;
+}
+.task-row.task-type-asset_creation {
+  background-color: #eb8cf7;
+}
+.task-row.task-type-asset_creation:hover {
+  background-color: #b864c0;
+}
+.task-row.task-type-social_media {
+  background-color: #ffe0b2;
+}
+.task-row.task-type-social_media:hover {
+  background-color: #ffd699;
+}
+.task-row.task-type-event_running {
+  background-color: #fff9c4;
+}
+.task-row.task-type-event_running:hover {
+  background-color: #fff59d;
+}
+
 /* Links */
 a {
   color: var(--accent);
