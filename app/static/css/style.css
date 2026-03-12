@@ -558,3 +558,163 @@ hr {
   border-top: 1px solid var(--border);
   margin: 1.5rem 0;
 }
+
+/* ========== Responsive / mobile-friendly ========== */
+
+@media (max-width: 768px) {
+  header {
+    padding: 0.65rem 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  header h1 {
+    font-size: 1.05rem;
+  }
+
+  nav {
+    gap: 0.35rem;
+  }
+
+  nav a {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.6rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+  }
+
+  main {
+    margin: 1rem;
+    padding: 1.25rem;
+    max-width: none;
+  }
+
+  main h1 {
+    font-size: 1.35rem;
+  }
+
+  main h2 {
+    font-size: 1.2rem;
+  }
+
+  .filter-form {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .filter-form .filter-field.filter-apply {
+    grid-column: span 2;
+  }
+
+  table {
+    font-size: 0.85rem;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th,
+  td {
+    padding: 0.5rem 0.5rem;
+    white-space: nowrap;
+  }
+
+  .report-table-wrapper {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .template-form {
+    max-width: none;
+  }
+
+  .due-date-option-label {
+    min-width: 0;
+  }
+
+  .due-date-input {
+    min-width: 6rem;
+    max-width: 100%;
+  }
+
+  .form-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .home-links {
+    grid-template-columns: 1fr;
+  }
+
+  .task-status-form {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .task-status-form select,
+  .task-list-status-form input[type="url"],
+  .task-list-status-form input[type="text"],
+  .task-list-status-form input[type="number"],
+  .task-list-status-form select {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  form.inline-form {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  form.inline-form select {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 15px;
+  }
+
+  header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  main {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  .filter-form {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-form .filter-field.filter-apply {
+    grid-column: 1;
+  }
+
+  .requirements-row {
+    flex-direction: column;
+  }
+
+  .form-section-fields {
+    gap: 0.75rem;
+  }
+
+  .games-multiselect {
+    max-width: none;
+  }
+}

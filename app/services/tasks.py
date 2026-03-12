@@ -149,10 +149,13 @@ def seed_default_task_templates() -> None:
     db.session.commit()
 
 
-def generate_tasks_for_event(event: Event) -> None:
-    """Generate EventTask rows for an event from active templates."""
+def generate_tasks_for_event(event: Event, task_completion_map: dict | None = None) -> None:
+    """Generate EventTask rows for an event from active templates.
 
-    now = datetime.utcnow()
+    task_completion_map: optional dict mapping task template name -> True (complete on time)
+        or a datetime (complete on that date). Used when importing from sheet; cells with
+        initials or dates are treated as complete on time.
+    """
     event_dt = event.event_datetime
 
     templates = (
@@ -180,7 +183,8 @@ def generate_tasks_for_event(event: Event) -> None:
         else:
             ideal_due = event_dt - timedelta(days=tmpl.lead_days_before_event)
 
-        actual_due = ideal_due if ideal_due >= now else now
+        # Use the calculated due date (past or future); do not clamp to "today"
+        actual_due = ideal_due
 
         task = EventTask(
             event=event,
@@ -192,4 +196,13 @@ def generate_tasks_for_event(event: Event) -> None:
             actual_due_at=actual_due,
         )
         db.session.add(task)
+        db.session.flush()
+
+        if task_completion_map and tmpl.name in task_completion_map:
+            val = task_completion_map[tmpl.name]
+            task.status = "complete"
+            if val is True:
+                task.completed_at = actual_due  # on time
+            elif isinstance(val, datetime):
+                task.completed_at = val
 
