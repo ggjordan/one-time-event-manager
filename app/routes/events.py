@@ -258,7 +258,25 @@ def assign_task(event_id: int, task_id: int):
     return _event_detail_redirect(event_id)
 
 
-    return redirect(url_for("events.event_detail", event_id=event_id))
+@events_bp.route("/<int:event_id>/tasks/<int:task_id>/delete", methods=["POST"])
+def delete_task(event_id: int, task_id: int):
+    """Permanently delete a single task from an event."""
+    task = EventTask.query.filter_by(id=task_id, event_id=event_id).first_or_404()
+    db.session.delete(task)
+    db.session.commit()
+    flash("Task permanently deleted.", "success")
+    return _event_detail_redirect(event_id)
+
+
+@events_bp.route("/<int:event_id>/delete", methods=["POST"])
+def delete_event(event_id: int):
+    """Permanently delete an event and all its tasks."""
+    event = Event.query.get_or_404(event_id)
+    title = event.title
+    db.session.delete(event)  # cascade deletes tasks
+    db.session.commit()
+    flash(f"Event “{title}” and all its tasks have been permanently deleted.", "success")
+    return redirect(url_for("events.list_events"))
 
 
 @events_bp.route("/<int:event_id>/tasks/add", methods=["GET", "POST"])
@@ -303,6 +321,7 @@ def add_custom_task(event_id: int):
             actual_due_at=due_date,
             status="incomplete",
             notes=notes if needs_notes else None,
+            requires_notes=needs_notes,
         )
         db.session.add(task)
         db.session.commit()
@@ -366,6 +385,80 @@ def regenerate_tasks(event_id: int):
     db.session.commit()
     flash("Tasks re-created from template. All tasks for this event were replaced.", "success")
     return redirect(url_for("events.event_detail", event_id=event_id))
+
+
+@events_bp.route("/<int:event_id>/edit", methods=["GET", "POST"])
+def edit_event(event_id: int):
+    event = Event.query.get_or_404(event_id)
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        date_str = request.form.get("date", "").strip()
+        time_str = request.form.get("time", "").strip()
+        game_id = request.form.get("game_id", type=int)
+        owner_id = request.form.get("owner_id", type=int)
+        allowed_range = request.form.get("allowed_date_range", "").strip()
+        notes = request.form.get("scheduling_notes", "").strip()
+        event_type = request.form.get("event_type", "").strip()
+
+        if not (title and date_str and owner_id):
+            flash("Title, date, and owner are required.", "error")
+            return redirect(url_for("events.edit_event", event_id=event_id))
+
+        if not game_id:
+            flash("Please select a game.", "error")
+            return redirect(url_for("events.edit_event", event_id=event_id))
+        game = Game.query.get(game_id)
+        if not game:
+            flash("Invalid game selected.", "error")
+            return redirect(url_for("events.edit_event", event_id=event_id))
+
+        owner = User.query.get(owner_id)
+        if not owner:
+            flash("Invalid owner selected.", "error")
+            return redirect(url_for("events.edit_event", event_id=event_id))
+
+        try:
+            event_date = datetime.fromisoformat(date_str)
+        except ValueError:
+            try:
+                parsed = datetime.strptime(date_str, "%Y-%m-%d")
+                event_date = parsed
+            except ValueError:
+                flash("Invalid date format.", "error")
+                return redirect(url_for("events.edit_event", event_id=event_id))
+
+        if time_str:
+            try:
+                t = datetime.strptime(time_str, "%H:%M").time()
+            except ValueError:
+                flash("Invalid time format.", "error")
+                return redirect(url_for("events.edit_event", event_id=event_id))
+            event_dt = datetime.combine(event_date.date(), t)
+        else:
+            event_dt = datetime.combine(event_date.date(), time_cls(18, 0))
+
+        event.title = title
+        event.owner = owner
+        event.game = game
+        event.event_type = event_type or None
+        event.event_datetime = event_dt
+        event.allowed_date_range = allowed_range or None
+        event.scheduling_notes = notes or None
+
+        db.session.commit()
+        flash("Event updated.", "success")
+        return redirect(url_for("events.event_detail", event_id=event_id))
+
+    games = Game.query.order_by(Game.name.asc()).all()
+    users = User.query.order_by(User.name.asc()).all()
+    event_type_options = EventType.query.order_by(EventType.name.asc()).all()
+    return render_template(
+        "events/edit.html",
+        event=event,
+        games=games,
+        users=users,
+        event_type_options=event_type_options,
+    )
 
 
 @events_bp.route("/new", methods=["GET", "POST"])

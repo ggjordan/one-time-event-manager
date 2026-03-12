@@ -163,7 +163,9 @@
                       {% if task.template and task.template.requires_drive_link %}
                         <input type="url" name="drive_link" placeholder="Link (for Complete)" title="Required when marking Complete" />
                       {% endif %}
-                      <input type="text" name="notes" placeholder="Notes" />
+                      {% if (task.template and task.template.requires_notes) or task.requires_notes %}
+                        <input type="text" name="notes" placeholder="Notes" />
+                      {% endif %}
                       <button type="submit" class="btn btn-primary">Update</button>
                     </form>
                   {% else %}

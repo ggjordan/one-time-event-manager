@@ -59,6 +59,23 @@ def edit_user(user_id: int):
     return render_template("users/edit.html", user=user)
 
 
+@users_bp.route("/<int:user_id>/delete", methods=["POST"])
+def delete_user(user_id: int):
+    """Permanently delete a user. Deletes events they own (and those tasks), unassigns their tasks, clears game lead."""
+    user = User.query.get_or_404(user_id)
+    name = user.name
+    # Delete events owned by this user (cascade deletes their tasks)
+    for event in list(user.events_owned):
+        db.session.delete(event)
+    # Unassign any tasks still assigned to them (e.g. on other users' events)
+    EventTask.query.filter_by(assignee_id=user_id).update({"assignee_id": None})
+    # Clear game lead if they were lead
+    Game.query.filter_by(lead_user_id=user_id).update({"lead_user_id": None})
+    db.session.delete(user)
+    db.session.commit()
+    flash(f"User “{name}” has been permanently deleted.", "success")
+    return redirect(url_for("users.list_users"))
+
 
 @users_bp.route("/merge", methods=["GET", "POST"])
 def merge_users():

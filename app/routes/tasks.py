@@ -101,6 +101,7 @@ def _build_task_list(
         EventTask.query.options(
             joinedload(EventTask.event).joinedload(Event.game),
             joinedload(EventTask.assignee),
+            joinedload(EventTask.template),
         )
     )
     if assignee_id is not None:

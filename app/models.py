@@ -107,6 +107,7 @@ class EventTask(db.Model):
     screenshot_path = db.Column(db.String(512))  # legacy
     drive_link = db.Column(db.String(512))  # Google Drive / link to image
     notes = db.Column(db.Text)
+    requires_notes = db.Column(db.Boolean, default=False, nullable=False)  # for custom tasks; template tasks use template.requires_notes
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(

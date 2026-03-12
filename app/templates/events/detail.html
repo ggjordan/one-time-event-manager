@@ -30,6 +30,10 @@
 
   <p>
     <a href="{{ url_for('events.list_events') }}" class="btn btn-secondary">Back to Events</a>
+    <a href="{{ url_for('events.edit_event', event_id=event.id) }}" class="btn btn-secondary" style="margin-left: 0.5rem;">Edit event</a>
+    <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Permanently delete this event and all its tasks? This cannot be undone.');">
+      <button type="submit" class="btn btn-secondary" style="margin-left: 0.5rem;">Delete event</button>
+    </form>
   </p>
 
   <hr />
@@ -151,28 +155,45 @@
                 Incomplete
               {% endif %}
             </td>
-            <td>
+            <td class="task-actions-cell">
               {% if task.status == "incomplete" %}
-                <form action="{{ url_for('events.complete_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-status-form">
-                  {% if task.id in attendance_task_ids %}
-                    <label for="attendees-{{ task.id }}">Attendees:</label>
-                    <input id="attendees-{{ task.id }}" name="attendees" type="number" min="0" required placeholder="Required" />
-                  {% endif %}
-                  <label for="status-{{ task.id }}">Mark as:</label>
-                  <select name="status" id="status-{{ task.id }}">
-                    <option value="complete">Complete</option>
-                    <option value="not_applicable">Not applicable</option>
-                    <option value="missed_deadline">Missed deadline</option>
-                  </select>
-                  {% if task.template and task.template.requires_drive_link %}
-                    <label for="drive-{{ task.id }}">Link (for Complete):</label>
-                    <input type="url" id="drive-{{ task.id }}" name="drive_link" placeholder="https://drive.google.com/..." />
-                  {% endif %}
-                  <label for="notes-{{ task.id }}">Notes:</label>
-                  <input type="text" id="notes-{{ task.id }}" name="notes" placeholder="Optional" />
-                  <button type="submit" class="btn btn-primary">Save</button>
+                <form action="{{ url_for('events.complete_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-form">
+                  <div class="task-row-form-fields">
+                    {% if task.id in attendance_task_ids %}
+                      <span class="task-row-field">
+                        <label for="attendees-{{ task.id }}" class="task-row-label">Attendees</label>
+                        <input id="attendees-{{ task.id }}" name="attendees" type="number" min="0" required placeholder="—" class="task-row-input task-row-input-narrow" />
+                      </span>
+                    {% endif %}
+                    <span class="task-row-field">
+                      <label for="status-{{ task.id }}" class="task-row-label">Mark as</label>
+                      <select name="status" id="status-{{ task.id }}" class="task-row-select">
+                        <option value="complete">Complete</option>
+                        <option value="not_applicable">Not applicable</option>
+                        <option value="missed_deadline">Missed deadline</option>
+                      </select>
+                    </span>
+                    {% if task.template and task.template.requires_drive_link %}
+                      <span class="task-row-field task-row-field-wide">
+                        <label for="drive-{{ task.id }}" class="task-row-label">Link (for Complete)</label>
+                        <input type="url" id="drive-{{ task.id }}" name="drive_link" placeholder="https://..." class="task-row-input" />
+                      </span>
+                    {% endif %}
+                    {% if (task.template and task.template.requires_notes) or task.requires_notes %}
+                      <span class="task-row-field task-row-field-wide">
+                        <label for="notes-{{ task.id }}" class="task-row-label">Notes</label>
+                        <input type="text" id="notes-{{ task.id }}" name="notes" placeholder="Optional" class="task-row-input" />
+                      </span>
+                    {% endif %}
+                    <span class="task-row-field task-row-buttons">
+                      <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </span>
+                  </div>
                 </form>
               {% endif %}
+              <form action="{{ url_for('events.delete_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-delete" onsubmit="return confirm('Permanently delete this task?');">
+                <button type="submit" class="btn btn-secondary btn-sm">Delete</button>
+              </form>
             </td>
           </tr>
         {% endfor %}

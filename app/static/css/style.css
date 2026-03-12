@@ -319,7 +319,7 @@ a:hover {
 
 .filter-form {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 0.6rem 1rem;
   align-items: end;
   margin-bottom: 0.75rem;
@@ -410,6 +410,46 @@ form.inline-form select {
 .task-list-status-form input[type="text"] { max-width: 140px; }
 .task-list-status-form input[type="number"] { max-width: 5rem; }
 .task-list-status-form select { max-width: 120px; }
+
+/* Event detail: task row actions — compact, scannable layout */
+.task-actions-cell {
+  min-width: 0;
+  vertical-align: middle;
+}
+.task-row-form { margin: 0; }
+.task-row-form-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 0.75rem;
+}
+.task-row-field { display: inline-flex; flex-direction: column; gap: 0.2rem; }
+.task-row-field-wide { min-width: 10rem; }
+.task-row-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+.task-row-input,
+.task-row-select {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  min-width: 7rem;
+}
+.task-row-input-narrow { min-width: 4rem; max-width: 5rem; }
+.task-row-input[placeholder] { min-width: 10rem; }
+.task-row-buttons { margin-left: 0.25rem; }
+.task-row-delete { margin-top: 0.35rem; display: block; }
+.btn-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+
 .checkbox-list { display: flex; flex-wrap: wrap; gap: 0 1rem; }
 .checkbox-list label { margin: 0; font-weight: 500; }
 

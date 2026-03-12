@@ -34,7 +34,12 @@
           <tr>
             <td>{{ u.name }}</td>
             <td>{{ u.email }}</td>
-            <td><a href="{{ url_for('users.edit_user', user_id=u.id) }}">Edit</a></td>
+            <td>
+              <a href="{{ url_for('users.edit_user', user_id=u.id) }}">Edit</a>
+              <form action="{{ url_for('users.delete_user', user_id=u.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Permanently delete {{ u.name }}? Their events and tasks will be removed or unassigned.');">
+                <button type="submit" style="background: none; border: none; padding: 0; margin-left: 0.5rem; cursor: pointer; text-decoration: underline; font-size: inherit;">Delete</button>
+              </form>
+            </td>
           </tr>
         {% endfor %}
       </tbody>

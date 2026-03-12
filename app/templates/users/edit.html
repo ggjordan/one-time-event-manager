@@ -15,5 +15,8 @@
     </div>
     <button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ url_for('users.list_users') }}" class="btn btn-secondary">Cancel</a>
+    <form action="{{ url_for('users.delete_user', user_id=user.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Permanently delete {{ user.name }}? Their events will be deleted and their assigned tasks unassigned.');">
+      <button type="submit" class="btn btn-secondary" style="margin-left: 0.5rem;">Delete user</button>
+    </form>
   </form>
 {% endblock %}
