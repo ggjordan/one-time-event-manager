@@ -396,6 +396,17 @@ form.inline-form select {
   max-width: 12rem;
 }
 
+.assign-saved {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.assign-saved.assign-saved-visible {
+  opacity: 1;
+}
+
 .task-status-form {
   display: flex;
   flex-wrap: wrap;

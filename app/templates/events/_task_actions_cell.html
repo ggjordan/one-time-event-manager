@@ -1,0 +1,42 @@
+{% if show_complete_form %}
+  <form action="{{ url_for('events.complete_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-form task-row-form-ajax" data-task-id="{{ task.id }}">
+    <div class="task-row-form-fields">
+      {% if is_attendance_task %}
+        <span class="task-row-field">
+          <label for="attendees-{{ task.id }}" class="task-row-label">Attendees</label>
+          <input id="attendees-{{ task.id }}" name="attendees" type="number" min="0" required placeholder="—" class="task-row-input task-row-input-narrow" />
+        </span>
+      {% endif %}
+      <span class="task-row-field">
+        <label for="status-{{ task.id }}" class="task-row-label">Mark as</label>
+        <select name="status" id="status-{{ task.id }}" class="task-row-select">
+          <option value="complete">Complete</option>
+          <option value="not_applicable">Not applicable</option>
+          <option value="missed_deadline">Missed deadline</option>
+        </select>
+      </span>
+      {% if requires_drive_link %}
+        <span class="task-row-field task-row-field-wide">
+          <label for="drive-{{ task.id }}" class="task-row-label">Link (for Complete)</label>
+          <input type="url" id="drive-{{ task.id }}" name="drive_link" placeholder="https://..." class="task-row-input" />
+        </span>
+      {% endif %}
+      {% if requires_notes %}
+        <span class="task-row-field task-row-field-wide">
+          <label for="notes-{{ task.id }}" class="task-row-label">Notes</label>
+          <input type="text" id="notes-{{ task.id }}" name="notes" placeholder="Optional" class="task-row-input" />
+        </span>
+      {% endif %}
+      <span class="task-row-field task-row-buttons">
+        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+      </span>
+    </div>
+  </form>
+{% else %}
+  <form action="{{ url_for('events.reopen_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-delete task-reopen-form-ajax" style="display: inline;" data-task-id="{{ task.id }}">
+    <button type="submit" class="btn btn-secondary btn-sm">Reopen</button>
+  </form>
+{% endif %}
+<form action="{{ url_for('events.delete_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-delete" onsubmit="return confirm('Permanently delete this task?');">
+  <button type="submit" class="btn btn-secondary btn-sm">Delete</button>
+</form>

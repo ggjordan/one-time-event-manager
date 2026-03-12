@@ -1,0 +1,15 @@
+{% if task.status == "complete" %}
+  Complete {{ task.completed_at.strftime("%b %-d") if task.completed_at else '' }}
+  {% if task.drive_link %}
+    <a href="{{ task.drive_link }}" target="_blank" rel="noopener">View link</a>
+  {% elif task.screenshot_path %}
+    <a href="{{ url_for('main.uploaded_screenshot', filename=task.screenshot_path) }}" target="_blank" rel="noopener">View image</a>
+  {% endif %}
+  {% if task.notes %}<br /><span class="task-notes">{{ task.notes }}</span>{% endif %}
+{% elif task.status == "not_applicable" %}
+  Not applicable{% if task.notes %}<br /><span class="task-notes">{{ task.notes }}</span>{% endif %}
+{% elif task.status == "missed_deadline" %}
+  Missed deadline{% if task.notes %}<br /><span class="task-notes">{{ task.notes }}</span>{% endif %}
+{% else %}
+  Incomplete
+{% endif %}

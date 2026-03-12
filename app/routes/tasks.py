@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from flask import Blueprint, redirect, render_template, request, url_for, flash
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for, flash
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 
@@ -346,9 +346,26 @@ def _list_tasks_redirect_params():
     }
 
 
+def _task_list_cell_fragments(task, list_params, show_complete_form):
+    """Render status and actions cell HTML for tasks list AJAX updates."""
+    status_html = render_template("tasks/_task_status_cell.html", task=task)
+    actions_html = render_template(
+        "tasks/_task_actions_cell.html",
+        task=task,
+        list_params=list_params,
+        show_complete_form=show_complete_form,
+        is_attendance_task=_is_attendance_task(task),
+        requires_drive_link=bool(task.template and getattr(task.template, "requires_drive_link", False)),
+        requires_notes=bool((task.template and getattr(task.template, "requires_notes", False)) or getattr(task, "requires_notes", False)),
+    )
+    return status_html, actions_html
+
+
 @tasks_bp.route("/<int:task_id>/set-status", methods=["POST"])
 def set_task_status(task_id: int):
     task = EventTask.query.options(joinedload(EventTask.event)).get_or_404(task_id)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    list_params = _list_tasks_redirect_params()
     status = (request.form.get("status") or "complete").strip().lower()
     if status not in ("complete", "not_applicable", "missed_deadline"):
         status = "complete"
@@ -356,26 +373,34 @@ def set_task_status(task_id: int):
     if _is_attendance_task(task) and status == "complete":
         attendees_val = request.form.get("attendees", "").strip()
         if not attendees_val:
+            if is_ajax:
+                return jsonify({"success": False, "error": "Enter the number of attendees to mark this task complete."}), 400
             flash("Enter the number of attendees to mark this task complete.", "error")
-            params = {k: v for k, v in _list_tasks_redirect_params().items() if v not in (None, "")}
+            params = {k: v for k, v in list_params.items() if v not in (None, "")}
             return redirect(url_for("tasks.list_tasks", **params))
         try:
             task.event.attendees = int(attendees_val)
         except ValueError:
+            if is_ajax:
+                return jsonify({"success": False, "error": "Attendees must be a number."}), 400
             flash("Attendees must be a number.", "error")
-            params = {k: v for k, v in _list_tasks_redirect_params().items() if v not in (None, "")}
+            params = {k: v for k, v in list_params.items() if v not in (None, "")}
             return redirect(url_for("tasks.list_tasks", **params))
 
     if status == "complete":
         drive_link = request.form.get("drive_link", "").strip()
         requires_drive = task.template and getattr(task.template, "requires_drive_link", False)
         if requires_drive and not drive_link:
+            if is_ajax:
+                return jsonify({"success": False, "error": "Please enter a link when marking Complete."}), 400
             flash("Please enter a link when marking Complete.", "error")
-            params = {k: v for k, v in _list_tasks_redirect_params().items() if v not in (None, "")}
+            params = {k: v for k, v in list_params.items() if v not in (None, "")}
             return redirect(url_for("tasks.list_tasks", **params))
         if drive_link and not is_allowed_drive_link(drive_link):
+            if is_ajax:
+                return jsonify({"success": False, "error": "Link must be a valid https URL from Google Drive, Dropbox, or OneDrive."}), 400
             flash("Link must be a valid https URL from Google Drive, Dropbox, or OneDrive.", "error")
-            params = {k: v for k, v in _list_tasks_redirect_params().items() if v not in (None, "")}
+            params = {k: v for k, v in list_params.items() if v not in (None, "")}
             return redirect(url_for("tasks.list_tasks", **params))
         task.drive_link = drive_link if drive_link else None
         task.screenshot_path = None
@@ -387,6 +412,26 @@ def set_task_status(task_id: int):
     task.status = status
     task.completed_at = datetime.utcnow()
     db.session.commit()
+    if is_ajax:
+        status_html, actions_html = _task_list_cell_fragments(task, list_params, show_complete_form=False)
+        return jsonify({"success": True, "status_html": status_html, "actions_html": actions_html})
     flash("Task status updated.", "success")
-    params = {k: v for k, v in _list_tasks_redirect_params().items() if v not in (None, "")}
+    params = {k: v for k, v in list_params.items() if v not in (None, "")}
+    return redirect(url_for("tasks.list_tasks", **params))
+
+
+@tasks_bp.route("/<int:task_id>/reopen", methods=["POST"])
+def reopen_task(task_id: int):
+    """Set a completed/NA/missed task back to incomplete; redirect back to tasks list with same filters."""
+    task = EventTask.query.options(joinedload(EventTask.template)).get_or_404(task_id)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    list_params = _list_tasks_redirect_params()
+    task.status = "incomplete"
+    task.completed_at = None
+    db.session.commit()
+    if is_ajax:
+        status_html, actions_html = _task_list_cell_fragments(task, list_params, show_complete_form=True)
+        return jsonify({"success": True, "status_html": status_html, "actions_html": actions_html})
+    flash("Task reopened (marked incomplete).", "success")
+    params = {k: v for k, v in list_params.items() if v not in (None, "")}
     return redirect(url_for("tasks.list_tasks", **params))

@@ -10,7 +10,7 @@
   {% endif %}
 
   <div class="tasks-controls task-filters">
-    <form method="get" action="{{ url_for('tasks.list_tasks') }}" class="filter-form unified-filters">
+    <form method="get" action="{{ url_for('tasks.list_tasks') }}" class="filter-form unified-filters" onsubmit="sessionStorage.setItem('tasksListFilterScroll', window.scrollY);">
       <div class="filter-field">
         <label for="search">Search:</label>
         <input type="text" id="search" name="search" value="{{ search }}" placeholder="Task or event" />
@@ -127,7 +127,7 @@
                     —
                   {% endif %}
                 </td>
-                <td>
+                <td id="task-list-status-{{ task.id }}">
                   {% if task.status == "complete" %}
                     Complete {{ task.completed_at.strftime("%b %-d") if task.completed_at else '' }}
                   {% elif task.status == "not_applicable" %}
@@ -139,9 +139,9 @@
                   {% endif %}
                 </td>
                 <td>{{ task.assignee.name if task.assignee else '-' }}</td>
-                <td>
+                <td id="task-list-actions-{{ task.id }}">
                   {% if task.status == "incomplete" %}
-                    <form action="{{ url_for('tasks.set_task_status', task_id=task.id) }}" method="post" class="task-status-form task-list-status-form">
+                    <form action="{{ url_for('tasks.set_task_status', task_id=task.id) }}" method="post" class="task-status-form task-list-status-form task-list-status-form-ajax" data-task-id="{{ task.id }}">
                       <input type="hidden" name="list_search" value="{{ search }}" />
                       <input type="hidden" name="list_assignee_id" value="{{ assignee_id or '' }}" />
                       <input type="hidden" name="list_status" value="{{ status_filter }}" />
@@ -170,6 +170,19 @@
                     </form>
                   {% else %}
                     <a href="{{ url_for('events.event_detail', event_id=task.event_id) }}">View event</a>
+                    <form action="{{ url_for('tasks.reopen_task', task_id=task.id) }}" method="post" class="task-list-reopen-form-ajax" style="display: inline;" data-task-id="{{ task.id }}">
+                      <input type="hidden" name="list_search" value="{{ search }}" />
+                      <input type="hidden" name="list_assignee_id" value="{{ assignee_id or '' }}" />
+                      <input type="hidden" name="list_status" value="{{ status_filter }}" />
+                      <input type="hidden" name="list_due_within" value="{{ due_within }}" />
+                      <input type="hidden" name="list_due_date_from" value="{{ due_date_from }}" />
+                      <input type="hidden" name="list_due_date_to" value="{{ due_date_to }}" />
+                      <input type="hidden" name="list_task_type" value="{{ task_type_filter }}" />
+                      <input type="hidden" name="list_group_by" value="{{ group_by }}" />
+                      <input type="hidden" name="list_sort_by" value="{{ sort_by }}" />
+                      <input type="hidden" name="list_sort_dir" value="{{ sort_dir }}" />
+                      <button type="submit" class="btn btn-secondary" style="margin-left: 0.5rem;">Reopen</button>
+                    </form>
                   {% endif %}
                 </td>
               </tr>
@@ -181,4 +194,61 @@
       {% endif %}
     </section>
   {% endfor %}
+
+  <script>
+    (function() {
+      document.addEventListener('submit', function(e) {
+        var form = e.target;
+        if (!form.matches) return;
+        var isStatusForm = form.matches('form.task-list-status-form-ajax');
+        var isReopenForm = form.matches('form.task-list-reopen-form-ajax');
+        if (!isStatusForm && !isReopenForm) return;
+        e.preventDefault();
+        var taskId = form.getAttribute('data-task-id');
+        if (!taskId) return;
+        var statusCell = document.getElementById('task-list-status-' + taskId);
+        var actionsCell = document.getElementById('task-list-actions-' + taskId);
+        if (!statusCell || !actionsCell) return;
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function(r) {
+          if (!r.ok) return r.json().then(function(d) { throw new Error(d.error || 'Request failed'); });
+          return r.json();
+        }).then(function(data) {
+          if (data && data.success && data.status_html !== undefined && data.actions_html !== undefined) {
+            statusCell.innerHTML = data.status_html;
+            actionsCell.innerHTML = data.actions_html;
+          }
+        }).catch(function(err) {
+          if (actionsCell && err && err.message) {
+            var msg = document.createElement('span');
+            msg.className = 'task-ajax-error';
+            msg.style.color = 'var(--error-text)';
+            msg.textContent = err.message;
+            actionsCell.insertBefore(msg, actionsCell.firstChild);
+            setTimeout(function() { if (msg.parentNode) msg.remove(); }, 4000);
+          }
+        });
+      });
+    })();
+
+    // Restore scroll position after applying filters (same page reload)
+    (function() {
+      function restoreScroll() {
+        var pos = sessionStorage.getItem('tasksListFilterScroll');
+        if (pos !== null) {
+          sessionStorage.removeItem('tasksListFilterScroll');
+          var y = parseInt(pos, 10);
+          if (!isNaN(y)) window.scrollTo(0, y);
+        }
+      }
+      if (document.readyState === 'complete') {
+        setTimeout(restoreScroll, 0);
+      } else {
+        window.addEventListener('load', function() { setTimeout(restoreScroll, 0); });
+      }
+    })();
+  </script>
 {% endblock %}

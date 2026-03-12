@@ -1,0 +1,9 @@
+{% if task.status == "complete" %}
+  Complete {{ task.completed_at.strftime("%b %-d") if task.completed_at else '' }}
+{% elif task.status == "not_applicable" %}
+  Not applicable
+{% elif task.status == "missed_deadline" %}
+  Missed deadline
+{% else %}
+  Incomplete
+{% endif %}

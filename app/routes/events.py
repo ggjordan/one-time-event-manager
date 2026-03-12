@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, time as time_cls
 import os
 import uuid
 
-from flask import Blueprint, current_app, redirect, render_template, request, url_for, flash
+from flask import Blueprint, current_app, jsonify, redirect, render_template, request, url_for, flash
 from sqlalchemy import or_
 
 from .. import db
@@ -195,11 +195,30 @@ def _event_detail_redirect(event_id, **extra):
     return redirect(url_for("events.event_detail", event_id=event_id, **params))
 
 
+def _task_cell_fragments(task, event, show_complete_form):
+    """Render status and actions cell HTML for AJAX updates."""
+    status_html = render_template(
+        "events/_task_status_cell.html",
+        task=task,
+    )
+    actions_html = render_template(
+        "events/_task_actions_cell.html",
+        task=task,
+        event=event,
+        show_complete_form=show_complete_form,
+        is_attendance_task=_is_attendance_task(task),
+        requires_drive_link=bool(task.template and getattr(task.template, "requires_drive_link", False)),
+        requires_notes=bool((task.template and getattr(task.template, "requires_notes", False)) or getattr(task, "requires_notes", False)),
+    )
+    return status_html, actions_html
+
+
 @events_bp.route("/<int:event_id>/tasks/<int:task_id>/complete", methods=["POST"])
 def complete_task(event_id: int, task_id: int):
     """Set task status: complete, not_applicable, or missed_deadline. For complete, accepts drive_link (required) and notes."""
     event = Event.query.get_or_404(event_id)
     task = EventTask.query.filter_by(id=task_id, event_id=event_id).first_or_404()
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     status = (request.form.get("status") or "complete").strip().lower()
     if status not in ALLOWED_TASK_STATUSES:
@@ -208,14 +227,20 @@ def complete_task(event_id: int, task_id: int):
     if _is_attendance_task(task) and status == "complete":
         attendees_val = request.form.get("attendees", "").strip()
         if not attendees_val:
+            if is_ajax:
+                return jsonify({"success": False, "error": "Enter the number of attendees to mark this task complete."}), 400
             flash("Enter the number of attendees to mark this task complete.", "error")
             return _event_detail_redirect(event_id)
         try:
             event.attendees = int(attendees_val)
         except ValueError:
+            if is_ajax:
+                return jsonify({"success": False, "error": "Attendees must be a number."}), 400
             flash("Attendees must be a number.", "error")
             return _event_detail_redirect(event_id)
         if event.attendees < 0:
+            if is_ajax:
+                return jsonify({"success": False, "error": "Attendees cannot be negative."}), 400
             flash("Attendees cannot be negative.", "error")
             return _event_detail_redirect(event_id)
 
@@ -223,9 +248,13 @@ def complete_task(event_id: int, task_id: int):
         drive_link = request.form.get("drive_link", "").strip()
         requires_drive = task.template and getattr(task.template, "requires_drive_link", False)
         if requires_drive and not drive_link:
+            if is_ajax:
+                return jsonify({"success": False, "error": "Please enter a link to the image (Google Drive, Dropbox, or OneDrive)."}), 400
             flash("Please enter a link to the image (Google Drive, Dropbox, or OneDrive).", "error")
             return _event_detail_redirect(event_id)
         if drive_link and not is_allowed_drive_link(drive_link):
+            if is_ajax:
+                return jsonify({"success": False, "error": "Link must be a valid https URL from Google Drive, Dropbox, or OneDrive."}), 400
             flash("Link must be a valid https URL from Google Drive, Dropbox, or OneDrive.", "error")
             return _event_detail_redirect(event_id)
         task.drive_link = drive_link if drive_link else None
@@ -241,8 +270,29 @@ def complete_task(event_id: int, task_id: int):
     task.completed_at = datetime.utcnow()
 
     db.session.commit()
+    if is_ajax:
+        status_html, actions_html = _task_cell_fragments(task, event, show_complete_form=False)
+        return jsonify({"success": True, "status_html": status_html, "actions_html": actions_html})
     flash(f"Task marked as {status.replace('_', ' ')}.", "success")
     return _event_detail_redirect(event_id)
+
+
+@events_bp.route("/<int:event_id>/tasks/<int:task_id>/reopen", methods=["POST"])
+def reopen_task(event_id: int, task_id: int):
+    """Set a completed/NA/missed task back to incomplete."""
+    event = Event.query.get_or_404(event_id)
+    task = EventTask.query.filter_by(id=task_id, event_id=event_id).first_or_404()
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    task.status = "incomplete"
+    task.completed_at = None
+    db.session.commit()
+    if is_ajax:
+        status_html, actions_html = _task_cell_fragments(task, event, show_complete_form=True)
+        return jsonify({"success": True, "status_html": status_html, "actions_html": actions_html})
+    flash("Task reopened (marked incomplete).", "success")
+    params = {k: v for k, v in request.args.items() if v}
+    url = url_for("events.event_detail", event_id=event_id, **params)
+    return redirect(f"{url}#task-row-{task_id}")
 
 
 @events_bp.route("/<int:event_id>/tasks/<int:task_id>/assign", methods=["POST"])
@@ -254,8 +304,12 @@ def assign_task(event_id: int, task_id: int):
     else:
         task.assignee_id = None
     db.session.commit()
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"success": True})
     flash("Task assignee updated.", "success")
-    return _event_detail_redirect(event_id)
+    params = {k: v for k, v in request.args.items() if v}
+    url = url_for("events.event_detail", event_id=event_id, **params)
+    return redirect(f"{url}#task-row-{task_id}")
 
 
 @events_bp.route("/<int:event_id>/tasks/<int:task_id>/delete", methods=["POST"])
@@ -340,20 +394,33 @@ def add_custom_task(event_id: int):
 
 @events_bp.route("/<int:event_id>/tasks/<int:task_id>/edit-due", methods=["POST"])
 def edit_task_due(event_id: int, task_id: int):
+    event = Event.query.get_or_404(event_id)
     task = EventTask.query.filter_by(id=task_id, event_id=event_id).first_or_404()
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     due_date_s = request.form.get("due_date", "").strip()
     if not due_date_s:
+        if is_ajax:
+            return jsonify({"success": False, "error": "Due date is required."}), 400
         flash("Due date is required.", "error")
         return redirect(url_for("events.event_detail", event_id=event_id))
     try:
         due_date = datetime.strptime(due_date_s, "%Y-%m-%d")
         due_date = due_date.replace(hour=17, minute=0, second=0, microsecond=0)
     except ValueError:
+        if is_ajax:
+            return jsonify({"success": False, "error": "Invalid due date."}), 400
         flash("Invalid due date.", "error")
         return redirect(url_for("events.event_detail", event_id=event_id))
     task.actual_due_at = due_date
     task.ideal_due_at = due_date
     db.session.commit()
+    if is_ajax:
+        due_cell_html = render_template(
+            "events/_task_due_cell.html",
+            task=task,
+            event=event,
+        )
+        return jsonify({"success": True, "due_cell_html": due_cell_html})
     flash("Due date updated.", "success")
     return redirect(url_for("events.event_detail", event_id=event_id))
 

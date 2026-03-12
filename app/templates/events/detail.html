@@ -50,7 +50,7 @@
     </form>
   {% else %}
     <div class="tasks-controls task-filters">
-      <form method="get" action="{{ url_for('events.event_detail', event_id=event.id) }}" class="filter-form unified-filters">
+      <form method="get" action="{{ url_for('events.event_detail', event_id=event.id) }}" class="filter-form unified-filters" onsubmit="sessionStorage.setItem('filterFormScroll', window.scrollY);">
         <div class="filter-field">
           <label for="event-task-search">Search:</label>
           <input type="text" id="event-task-search" name="search" value="{{ search }}" placeholder="Task name" />
@@ -113,32 +113,34 @@
       </thead>
       <tbody>
         {% for task in tasks %}
-          <tr class="task-row task-type-{{ get_task_type(task.group) }} {{ task_timings.get(task.id) or '' }}">
+          <tr id="task-row-{{ task.id }}" class="task-row task-type-{{ get_task_type(task.group) }} {{ task_timings.get(task.id) or '' }}">
             <td>{{ task.name }}</td>
             <td>
-                <form action="{{ url_for('events.assign_task', event_id=event.id, task_id=task.id) }}" method="post" class="inline-form">
-                <select name="assignee_id" onchange="this.form.submit()">
+                <form action="{{ url_for('events.assign_task', event_id=event.id, task_id=task.id) }}" method="post" class="inline-form assign-task-form">
+                <select name="assignee_id" onchange="this.form.requestSubmit()">
                   <option value="">— Unassigned —</option>
                   {% for u in users %}
                     <option value="{{ u.id }}" {{ 'selected' if task.assignee_id == u.id else '' }}>{{ u.name }}</option>
                   {% endfor %}
                 </select>
+                <span class="assign-saved" aria-live="polite"></span>
               </form>
             </td>
-            <td>
+            <td id="task-due-{{ task.id }}">
               {% if task.actual_due_at %}
                 {{ task.actual_due_at.strftime("%A, %B %-d") }}
               {% else %}
                 —
               {% endif %}
               {% if task.template_id is none %}
-                <form action="{{ url_for('events.edit_task_due', event_id=event.id, task_id=task.id) }}" method="post" class="inline-form" style="margin-top: 0.25rem;">
+                <form action="{{ url_for('events.edit_task_due', event_id=event.id, task_id=task.id) }}" method="post" class="inline-form edit-task-due-form" style="margin-top: 0.25rem;" data-task-id="{{ task.id }}">
                   <input type="date" name="due_date" value="{{ task.actual_due_at.strftime('%Y-%m-%d') if task.actual_due_at else '' }}" />
                   <button type="submit" class="btn btn-secondary">Change due</button>
+                  <span class="assign-saved" aria-live="polite"></span>
                 </form>
               {% endif %}
             </td>
-            <td>
+            <td id="task-status-{{ task.id }}">
               {% if task.status == "complete" %}
                 Complete {{ task.completed_at.strftime("%b %-d") if task.completed_at else '' }}
                 {% if task.drive_link %}
@@ -155,9 +157,9 @@
                 Incomplete
               {% endif %}
             </td>
-            <td class="task-actions-cell">
+            <td id="task-actions-{{ task.id }}" class="task-actions-cell">
               {% if task.status == "incomplete" %}
-                <form action="{{ url_for('events.complete_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-form">
+                <form action="{{ url_for('events.complete_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-form task-row-form-ajax" data-task-id="{{ task.id }}">
                   <div class="task-row-form-fields">
                     {% if task.id in attendance_task_ids %}
                       <span class="task-row-field">
@@ -190,6 +192,10 @@
                     </span>
                   </div>
                 </form>
+              {% else %}
+                <form action="{{ url_for('events.reopen_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-delete task-reopen-form-ajax" style="display: inline;" data-task-id="{{ task.id }}">
+                  <button type="submit" class="btn btn-secondary btn-sm">Reopen</button>
+                </form>
               {% endif %}
               <form action="{{ url_for('events.delete_task', event_id=event.id, task_id=task.id) }}" method="post" class="task-row-delete" onsubmit="return confirm('Permanently delete this task?');">
                 <button type="submit" class="btn btn-secondary btn-sm">Delete</button>
@@ -205,5 +211,120 @@
       </form>
     </p>
   {% endif %}
+
+  <script>
+    (function() {
+      // Assignee dropdown: submit via AJAX so page doesn't jump
+      document.querySelectorAll('form.assign-task-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          var form = e.target;
+          var savedSpan = form.querySelector('.assign-saved');
+          fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data && data.success) {
+              if (savedSpan) {
+                savedSpan.textContent = 'Saved';
+                savedSpan.classList.add('assign-saved-visible');
+                setTimeout(function() {
+                  savedSpan.textContent = '';
+                  savedSpan.classList.remove('assign-saved-visible');
+                }, 1500);
+              }
+            }
+          }).catch(function() {
+            if (savedSpan) savedSpan.textContent = 'Error';
+          });
+        });
+      });
+
+      // Change due form: submit via AJAX and update due date cell in place
+      document.addEventListener('submit', function(e) {
+        var form = e.target;
+        if (!form.matches || !form.matches('form.edit-task-due-form')) return;
+        e.preventDefault();
+        var taskId = form.getAttribute('data-task-id');
+        if (!taskId) return;
+        var dueCell = document.getElementById('task-due-' + taskId);
+        if (!dueCell) return;
+        var savedSpan = form.querySelector('.assign-saved');
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function(r) {
+          if (!r.ok) return r.json().then(function(d) { throw new Error(d.error || 'Request failed'); });
+          return r.json();
+        }).then(function(data) {
+          if (data && data.success && data.due_cell_html !== undefined) {
+            dueCell.innerHTML = data.due_cell_html;
+            var newSaved = dueCell.querySelector('.assign-saved');
+            if (newSaved) {
+              newSaved.textContent = 'Saved';
+              newSaved.classList.add('assign-saved-visible');
+              setTimeout(function() {
+                newSaved.textContent = '';
+                newSaved.classList.remove('assign-saved-visible');
+              }, 1500);
+            }
+          }
+        }).catch(function(err) {
+          if (savedSpan) {
+            savedSpan.textContent = err.message || 'Error';
+            savedSpan.style.color = 'var(--error-text)';
+            setTimeout(function() { savedSpan.textContent = ''; savedSpan.style.color = ''; }, 3000);
+          }
+        });
+        return;
+      });
+
+      // Complete and Reopen forms: submit via AJAX and update status/actions cells in place
+      document.addEventListener('submit', function(e) {
+        var form = e.target;
+        if (!form.matches || (!form.matches('form.task-row-form-ajax') && !form.matches('form.task-reopen-form-ajax'))) return;
+        e.preventDefault();
+        var taskId = form.getAttribute('data-task-id');
+        if (!taskId) return;
+        var statusCell = document.getElementById('task-status-' + taskId);
+        var actionsCell = document.getElementById('task-actions-' + taskId);
+        if (!statusCell || !actionsCell) return;
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function(r) {
+          if (!r.ok) return r.json().then(function(d) { throw new Error(d.error || 'Request failed'); });
+          return r.json();
+        }).then(function(data) {
+          if (data && data.success && data.status_html !== undefined && data.actions_html !== undefined) {
+            statusCell.innerHTML = data.status_html;
+            actionsCell.innerHTML = data.actions_html;
+          }
+        }).catch(function(err) {
+          if (actionsCell && err && err.message) {
+            var msg = document.createElement('span');
+            msg.className = 'task-ajax-error';
+            msg.style.color = 'var(--error-text)';
+            msg.textContent = err.message;
+            actionsCell.insertBefore(msg, actionsCell.firstChild);
+            setTimeout(function() { if (msg.parentNode) msg.remove(); }, 4000);
+          }
+        });
+      });
+    })();
+
+    // Restore scroll position after applying task filters (same page reload)
+    (function() {
+      var pos = sessionStorage.getItem('filterFormScroll');
+      if (pos !== null) {
+        sessionStorage.removeItem('filterFormScroll');
+        var y = parseInt(pos, 10);
+        if (!isNaN(y)) requestAnimationFrame(function() { window.scrollTo(0, y); });
+      }
+    })();
+  </script>
 {% endblock %}
 

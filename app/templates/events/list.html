@@ -9,7 +9,7 @@
     <a href="{{ url_for('events.create_event') }}" class="btn btn-primary">Create Event</a>
   </p>
 
-  <form method="get" action="{{ url_for('events.list_events') }}" class="filter-form tasks-controls">
+  <form method="get" action="{{ url_for('events.list_events') }}" class="filter-form tasks-controls" onsubmit="sessionStorage.setItem('filterFormScroll', window.scrollY);">
     <div class="filter-field">
       <label for="search">Search (contains):</label>
       <input type="text" id="search" name="search" value="{{ search }}" placeholder="Title, owner, game, type" />
@@ -57,5 +57,16 @@
   {% else %}
     <p>No events yet. <a href="{{ url_for('events.create_event') }}">Create your first event</a>.</p>
   {% endif %}
+
+  <script>
+    (function() {
+      var pos = sessionStorage.getItem('filterFormScroll');
+      if (pos !== null) {
+        sessionStorage.removeItem('filterFormScroll');
+        var y = parseInt(pos, 10);
+        if (!isNaN(y)) requestAnimationFrame(function() { window.scrollTo(0, y); });
+      }
+    })();
+  </script>
 {% endblock %}
 

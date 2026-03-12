@@ -1,0 +1,12 @@
+{% if task.actual_due_at %}
+  {{ task.actual_due_at.strftime("%A, %B %-d") }}
+{% else %}
+  —
+{% endif %}
+{% if task.template_id is none %}
+  <form action="{{ url_for('events.edit_task_due', event_id=event.id, task_id=task.id) }}" method="post" class="inline-form edit-task-due-form" style="margin-top: 0.25rem;" data-task-id="{{ task.id }}">
+    <input type="date" name="due_date" value="{{ task.actual_due_at.strftime('%Y-%m-%d') if task.actual_due_at else '' }}" />
+    <button type="submit" class="btn btn-secondary">Change due</button>
+    <span class="assign-saved" aria-live="polite"></span>
+  </form>
+{% endif %}

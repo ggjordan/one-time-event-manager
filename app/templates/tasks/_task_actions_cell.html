@@ -1,0 +1,44 @@
+{% if show_complete_form %}
+  <form action="{{ url_for('tasks.set_task_status', task_id=task.id) }}" method="post" class="task-status-form task-list-status-form task-list-status-form-ajax" data-task-id="{{ task.id }}">
+    <input type="hidden" name="list_search" value="{{ list_params.search }}" />
+    <input type="hidden" name="list_assignee_id" value="{{ list_params.assignee_id }}" />
+    <input type="hidden" name="list_status" value="{{ list_params.status }}" />
+    <input type="hidden" name="list_due_within" value="{{ list_params.due_within }}" />
+    <input type="hidden" name="list_due_date_from" value="{{ list_params.due_date_from }}" />
+    <input type="hidden" name="list_due_date_to" value="{{ list_params.due_date_to }}" />
+    <input type="hidden" name="list_task_type" value="{{ list_params.task_type }}" />
+    <input type="hidden" name="list_group_by" value="{{ list_params.group_by }}" />
+    <input type="hidden" name="list_sort_by" value="{{ list_params.sort_by }}" />
+    <input type="hidden" name="list_sort_dir" value="{{ list_params.sort_dir }}" />
+    <select name="status">
+      <option value="complete">Complete</option>
+      <option value="not_applicable">Not applicable</option>
+      <option value="missed_deadline">Missed deadline</option>
+    </select>
+    {% if is_attendance_task %}
+      <input type="number" name="attendees" placeholder="Attendees" min="0" title="Required for attendance task" />
+    {% endif %}
+    {% if requires_drive_link %}
+      <input type="url" name="drive_link" placeholder="Link (for Complete)" title="Required when marking Complete" />
+    {% endif %}
+    {% if requires_notes %}
+      <input type="text" name="notes" placeholder="Notes" />
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Update</button>
+  </form>
+{% else %}
+  <a href="{{ url_for('events.event_detail', event_id=task.event_id) }}">View event</a>
+  <form action="{{ url_for('tasks.reopen_task', task_id=task.id) }}" method="post" class="task-list-reopen-form-ajax" style="display: inline;" data-task-id="{{ task.id }}">
+    <input type="hidden" name="list_search" value="{{ list_params.search }}" />
+    <input type="hidden" name="list_assignee_id" value="{{ list_params.assignee_id }}" />
+    <input type="hidden" name="list_status" value="{{ list_params.status }}" />
+    <input type="hidden" name="list_due_within" value="{{ list_params.due_within }}" />
+    <input type="hidden" name="list_due_date_from" value="{{ list_params.due_date_from }}" />
+    <input type="hidden" name="list_due_date_to" value="{{ list_params.due_date_to }}" />
+    <input type="hidden" name="list_task_type" value="{{ list_params.task_type }}" />
+    <input type="hidden" name="list_group_by" value="{{ list_params.group_by }}" />
+    <input type="hidden" name="list_sort_by" value="{{ list_params.sort_by }}" />
+    <input type="hidden" name="list_sort_dir" value="{{ list_params.sort_dir }}" />
+    <button type="submit" class="btn btn-secondary" style="margin-left: 0.5rem;">Reopen</button>
+  </form>
+{% endif %}
